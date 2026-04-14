@@ -90,6 +90,27 @@
       color: #555;
     }
 
+    .exhibit-btn {
+      font-family: 'Courier New', monospace;
+      font-size: 0.65rem;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: 1px solid #222;
+      color: #444;
+      padding: 10px 12px;
+      background: transparent;
+      display: block;
+      line-height: 1.6;
+      transition: border-color 0.15s, color 0.15s;
+      pointer-events: none;
+    }
+    .exhibit-btn span { font-weight: 400; color: #2a2a2a; font-size: 0.6rem; }
+    .exhibit-btn:hover { border-color: #c0392b; color: #888; }
+    .exhibit-btn.active { border-color: #c0392b; color: #c0392b; pointer-events: none; }
+    .exhibit-btn.active span { color: #7a1a1a; }
+
     #cheat-input {
       font-family: 'Courier New', monospace;
       font-size: 0.85rem;
@@ -136,6 +157,24 @@
   <div class="btn-row">
     <a id="essay-btn" class="btn locked">DOCUMENTS</a>
     <a id="start-btn" href="loading.html" class="btn">START</a>
+  </div>
+
+  <div style="text-align:center; width: min(860px, 90vw);">
+    <div style="font-size:0.65rem; font-weight:900; letter-spacing:3px; text-transform:uppercase; color:#333; margin-bottom:14px;">APIS Museum — Other Exhibits</div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:8px;">
+      <a href="#" class="exhibit-btn">LGBTQ+<br><span>Rights & Culture</span></a>
+      <a href="#" class="exhibit-btn">Youth<br><span>Leisure</span></a>
+      <a href="#" class="exhibit-btn">K-Beauty<br><span>Standards</span></a>
+      <a href="#" class="exhibit-btn">Academic<br><span>Pressure</span></a>
+      <a href="#" class="exhibit-btn">V-Tubers<br><span>& Streaming</span></a>
+      <a href="#" class="exhibit-btn active">Internet<br><span>Controversy ◀ YOU ARE HERE</span></a>
+      <a href="#" class="exhibit-btn">Influencers<br><span>& Celebrity Ads</span></a>
+      <a href="#" class="exhibit-btn">Online<br><span>Gambling</span></a>
+      <a href="#" class="exhibit-btn">Convenience<br><span>Stores</span></a>
+      <a href="#" class="exhibit-btn">Smart<br><span>Tech</span></a>
+      <a href="#" class="exhibit-btn">Global<br><span>Trends</span></a>
+      <a href="#" class="exhibit-btn">Major<br><span>Celebrities</span></a>
+    </div>
   </div>
 
   <input id="cheat-input" type="text" placeholder="hint: look below" autocomplete="off" spellcheck="false" />
