@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Internet Controversy</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d0d;
+      color: #f0f0f0;
+      font-family: 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 48px;
+    }
+
+    .title-wrap {
+      position: relative;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: clamp(2.2rem, 8vw, 5rem);
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #fff;
+      animation: glitch 2s infinite;
+    }
+
+    @keyframes glitch {
+      0%, 70%, 100% { text-shadow: none; transform: none; }
+      75% { text-shadow: -3px 0 #c0392b, 3px 0 #fff; transform: skewX(-3deg) translateX(-2px); }
+      82% { text-shadow: 4px 0 #c0392b, -4px 0 #fff; transform: skewX(2deg) translateX(2px); }
+      88% { text-shadow: -2px 0 #c0392b, 2px 0 #fff; transform: skewX(-1deg); }
+      93% { text-shadow: none; transform: none; }
+    }
+
+    .title-accent {
+      display: block;
+      width: 100%;
+      height: 4px;
+      background: #c0392b;
+      margin-top: 10px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    a.btn {
+      font-family: 'Courier New', monospace;
+      font-size: 1rem;
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: 4px solid #fff;
+      outline: 4px solid #000;
+      color: #fff;
+      padding: 14px 40px;
+      background: transparent;
+      transition: background 0.15s;
+    }
+
+    a.btn:hover {
+      background: #c0392b;
+    }
+
+    a.btn.locked {
+      opacity: 0.3;
+      pointer-events: none;
+      cursor: not-allowed;
+      border-color: #555;
+      outline-color: #000;
+      color: #555;
+    }
+
+    a.btn.locked::after {
+      content: ' [LOCKED]';
+      font-size: 0.75rem;
+      color: #555;
+    }
+
+    #cheat-input {
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #2a2a2a;
+      color: #333;
+      padding: 6px 16px;
+      text-align: center;
+      outline: none;
+      width: 260px;
+    }
+    #cheat-input::placeholder { color: #2a2a2a; }
+    #cheat-input:focus { border-bottom-color: #444; color: #555; }
+
+    #reset-btn {
+      font-family: 'Courier New', monospace;
+      font-size: 0.7rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: transparent;
+      border: none;
+      color: #2a2a2a;
+      cursor: pointer;
+      padding: 4px 8px;
+      position: fixed;
+      bottom: 60px;
+      right: 20px;
+    }
+    #reset-btn:hover { color: #c0392b; }
+  </style>
+</head>
+<body>
+
+  <div class="title-wrap">
+    <h1>INTERNET CONTROVERSY</h1>
+    <span class="title-accent"></span>
+  </div>
+
+  <div class="btn-row">
+    <a id="essay-btn" class="btn locked">DOCUMENTS</a>
+    <a id="start-btn" href="loading.html" class="btn">START</a>
+  </div>
+
+  <input id="cheat-input" type="text" placeholder="hint: look below" autocomplete="off" spellcheck="false" />
+
+  <script>
+    if (localStorage.getItem('essayUnlocked') === 'true') {
+      const btn = document.getElementById('essay-btn');
+      btn.classList.remove('locked');
+      btn.href = 'Essay.html';
+    }
+
+
+    // Cheat code input
+    document.getElementById('cheat-input').addEventListener('input', function () {
+      if (this.value.trim().toLowerCase() === 'unmoderated') {
+        localStorage.setItem('cheatUnlocked', 'true');
+        localStorage.setItem('essayUnlocked', 'true');
+        const btn = document.getElementById('essay-btn');
+        btn.classList.remove('locked');
+        btn.href = 'Essay.html';
+        const flash = document.getElementById('cheat-flash');
+        flash.style.display = 'block';
+        setTimeout(() => flash.style.display = 'none', 3000);
+        this.value = '';
+        this.placeholder = '✓ unlocked';
+      }
+    });
+  </script>
+
+  <div style="position:fixed; bottom:24px; left:0; right:0; text-align:center; padding:8px; font-family:'Courier New',monospace; font-size:0.85rem; font-weight:900; color:#c0392b; letter-spacing:4px; text-transform:uppercase;">
+    ⚠ Warning: Unmoderated
+  </div>
+
+  <!-- Reset progress button -->
+  <button id="reset-btn" onclick="
+    localStorage.removeItem('essayUnlocked');
+    localStorage.removeItem('stage2Complete');
+    localStorage.removeItem('stage3Complete');
+    localStorage.removeItem('stage4Complete');
+    localStorage.removeItem('cheatUnlocked');
+    localStorage.removeItem('endingComplete');
+    location.reload();
+  ">RESET PROGRESS</button>
+
+  <!-- Cheat code flash notification -->
+  <div id="cheat-flash" style="position:fixed; top:30px; left:50%; transform:translateX(-50%); background:#c0392b; color:#fff; font-family:'Courier New',monospace; font-size:0.85rem; font-weight:900; letter-spacing:3px; text-transform:uppercase; padding:10px 32px; border:4px solid #fff; outline:4px solid #000; display:none; z-index:999;">
+    ✓ CHEAT CODE ACTIVATED — ALL DOCUMENTS UNLOCKED
+  </div>
+
+</body>
+</html>

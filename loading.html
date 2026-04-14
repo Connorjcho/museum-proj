@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loading...</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d0d;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .load-label {
+      font-size: 0.7rem;
+      font-weight: 900;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #333;
+    }
+
+    .bar-track {
+      width: min(320px, 80vw);
+      height: 3px;
+      background: #1a1a1a;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      background: #c0392b;
+      transition: width 0.1s linear;
+    }
+
+    .pct {
+      font-size: 0.7rem;
+      font-weight: 900;
+      color: #333;
+      letter-spacing: 3px;
+    }
+
+    .fact-box {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(520px, 88vw);
+      border-left: 3px solid #c0392b;
+      padding: 12px 18px;
+      background: #0a0a0a;
+    }
+
+    .fact-label {
+      font-size: 0.6rem;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #c0392b;
+      margin-bottom: 7px;
+    }
+
+    .fact-text {
+      font-size: 0.85rem;
+      color: #bbb;
+      line-height: 1.7;
+      letter-spacing: 0.02em;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="load-label">Loading</div>
+  <div class="bar-track">
+    <div class="bar-fill" id="bar"></div>
+  </div>
+  <div class="pct" id="pct">0%</div>
+
+  <div class="fact-box">
+    <div class="fact-label">Did you know?</div>
+    <div class="fact-text" id="fact-text"></div>
+  </div>
+
+  <script>
+    const facts = [
+      { tag: 'Youth Leisure',            text: 'Karaoke in South Korea was introduced in 1991.' },
+      { tag: 'Smart Tech',               text: 'A toothbrush was developed that claims to detect over 300 health issues simply by being placed in your mouth.' },
+      { tag: 'V-Tuber',                  text: 'Some V-Tubers are also professional wrestlers.' },
+      { tag: 'LGBTQ+',                   text: 'About 7% of Americans identify as gay, lesbian, or bisexual.' },
+      { tag: 'K-Beauty',                 text: 'A ginseng extract has recently been developed that is now widely used in Korean skincare routines.' },
+      { tag: 'Korean Trend',             text: 'Color analysis became a mainstream trend largely due to the popularity of K-Dramas.' },
+      { tag: 'Academics',                text: 'Yale University once held a competition called a Performative Contest.' },
+      { tag: 'Gambling & FOMO',          text: 'Gacha games are banned in Japan due to gambling regulations.' },
+      { tag: 'Major Celebrities',        text: "Taylor Swift's Eras Tour was the first concert tour in history to gross over $1 billion." },
+      { tag: 'Influencer Advertising',   text: 'The influencer marketing industry was worth over $24 billion globally in 2024.' },
+      { tag: 'Convenience Store',        text: '7-Eleven got its name from its original operating hours: 7 AM to 11 PM.' },
+    ];
+
+    const pick = facts[Math.floor(Math.random() * facts.length)];
+    document.getElementById('fact-text').innerHTML = '<span style="color:#888; font-weight:900; letter-spacing:2px; text-transform:uppercase; font-size:0.65rem;">' + pick.tag + ' — </span>' + pick.text;
+
+    const bar = document.getElementById('bar');
+    const pct = document.getElementById('pct');
+    let progress = 0;
+
+    const interval = setInterval(() => {
+      progress += Math.random() * 6 + 2;
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(interval);
+        bar.style.width = '100%';
+        pct.textContent = '100%';
+        let dest = 'game.html';
+        if (localStorage.getItem('stage3Complete') === 'true') {
+          dest = 'Game4.html';
+        } else if (localStorage.getItem('stage2Complete') === 'true') {
+          dest = 'Game3.html';
+        } else if (localStorage.getItem('essayUnlocked') === 'true') {
+          dest = 'Game2.html';
+        }
+        setTimeout(() => { window.location.href = dest; }, 400);
+        return;
+      }
+      bar.style.width = progress + '%';
+      pct.textContent = Math.floor(progress) + '%';
+    }, 120);
+  </script>
+
+</body>
+</html>

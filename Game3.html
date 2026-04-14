@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Internet Controversy — Stage 3</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d0d;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Courier New', monospace;
+    }
+
+    .scene {
+      position: fixed;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+    }
+    .scene.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* ── Persistent back button ── */
+    #back-btn {
+      position: fixed;
+      top: 20px; left: 20px;
+      z-index: 100;
+      font-family: 'Courier New', monospace;
+      font-size: 13px; font-weight: 900;
+      letter-spacing: 2px; text-transform: uppercase;
+      text-decoration: none; color: #fff;
+      background: rgba(10,10,14,0.85);
+      border: 3px solid #fff; outline: 3px solid #000;
+      padding: 8px 20px;
+      transition: background 0.15s;
+    }
+    #back-btn:hover { background: #c0392b; }
+
+    /* ══════════════════════════════
+       SCENE — GRID PUZZLE
+    ══════════════════════════════ */
+    #scene-puzzle .room-bg {
+      position: absolute; inset: 0;
+      background-image: url('game3_bg.png');
+      background-size: cover;
+      background-position: center center;
+      filter: blur(3px) brightness(0.65);
+      transform: scale(1.04);
+    }
+
+    #grid-canvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      image-rendering: pixelated;
+    }
+
+    #puzzle-hud {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(10,10,14,0.92);
+      border-top: 4px solid #fff;
+      padding: 14px 32px;
+      display: flex; align-items: center;
+      justify-content: space-between;
+      z-index: 30;
+    }
+    #puzzle-hud::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: 0; right: 0;
+      height: 4px; background: #c0392b;
+      pointer-events: none;
+    }
+    #puzzle-hint {
+      font-size: 15px; font-weight: 700;
+      color: #f0f0f0; letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    #puzzle-hint .key-tag {
+      display: inline-block;
+      background: #fff; color: #0d0d0d;
+      padding: 2px 8px; margin: 0 3px;
+      font-weight: 900; font-size: 14px;
+    }
+    #puzzle-hint .wall-tag {
+      background: rgba(52,152,219,0.3);
+      border: 2px solid #3498db;
+      color: #7fccf0;
+      padding: 2px 8px; margin: 0 3px;
+    }
+    #puzzle-hint .toxic-tag {
+      background: rgba(192,57,180,0.3);
+      border: 2px solid #c039b4;
+      color: #f07ff0;
+      padding: 2px 8px; margin: 0 3px;
+    }
+    #step-counter {
+      font-size: 16px; font-weight: 900;
+      color: #c0392b; letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* Penalty flash overlay */
+    #penalty-flash {
+      position: fixed; inset: 0;
+      background: rgba(180,30,160,0.35);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.08s;
+      z-index: 200;
+    }
+    #penalty-flash.show { opacity: 1; }
+
+    /* Penalty popup text */
+    #penalty-popup {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 36px; font-weight: 900;
+      color: #f07ff0;
+      text-shadow: 0 0 20px rgba(192,57,180,0.9);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      z-index: 210;
+    }
+    #penalty-popup.show { opacity: 1; }
+
+    /* ══════════════════════════════
+       SCENE — STAGE COMPLETE
+    ══════════════════════════════ */
+    #scene-complete {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 32px; background: #0d0d0d;
+    }
+    #scene-complete .complete-title {
+      font-size: 52px; font-weight: 900;
+      color: #fff; letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+    #scene-complete .complete-title span { color: #c0392b; }
+    #scene-complete .unlock-box {
+      border: 4px solid #fff; outline: 4px solid #000;
+      background: rgba(10,10,14,0.95);
+      padding: 28px 48px; text-align: center;
+      position: relative;
+    }
+    #scene-complete .unlock-box::before {
+      content: ''; position: absolute;
+      top: -1px; left: 0; right: 0;
+      height: 4px; background: #c0392b;
+    }
+    #scene-complete .unlock-label {
+      font-size: 13px; letter-spacing: 3px;
+      color: #c0392b; text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    #scene-complete .unlock-msg {
+      font-size: 22px; font-weight: 900;
+      color: #f0f0f0; letter-spacing: 1px;
+    }
+    #scene-complete .btn-back {
+      font-family: 'Courier New', monospace;
+      font-size: 16px; font-weight: 900;
+      letter-spacing: 3px; text-transform: uppercase;
+      text-decoration: none; color: #fff;
+      background: #c0392b;
+      border: 4px solid #fff; outline: 4px solid #000;
+      padding: 14px 40px; cursor: pointer;
+      transition: background 0.15s;
+    }
+    #scene-complete .btn-back:hover { background: #e74c3c; }
+
+    /* ══════════════════════════════
+       SCENE — POST-CLEAR DIALOGUE
+    ══════════════════════════════ */
+    #scene-dialogue .room-bg {
+      position: absolute; inset: 0;
+      background-image: url('game3_bg.png');
+      background-size: cover;
+      background-position: center center;
+      filter: blur(3px) brightness(0.6);
+      transform: scale(1.04);
+    }
+
+    #scene-dialogue canvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      image-rendering: pixelated;
+    }
+
+    .vignette {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.75) 100%);
+      pointer-events: none;
+    }
+
+    /* ── Character sprite ── */
+    #char-sprite {
+      position: absolute;
+      left: 50%; bottom: 8vh;
+      transform: translateX(-50%);
+      width: 440px; height: 600px;
+      display: flex; align-items: flex-end; justify-content: center;
+      background: linear-gradient(160deg, #1a0a2e 0%, #0d0514 100%);
+      border: 4px solid #7b2d8b; outline: 4px solid #000;
+      image-rendering: pixelated;
+      animation: charBob 3s ease-in-out infinite;
+      z-index: 10;
+    }
+    #char-sprite::after {
+      content: '?';
+      font-size: 140px; font-weight: 900;
+      color: rgba(180,80,200,0.15);
+      line-height: 1; margin-bottom: 30px;
+    }
+    /* Karrar placeholder — no img */
+    #char-sprite.is-karrar {
+      background: linear-gradient(160deg, #1e1e2a 0%, #0d0d14 100%);
+      border-color: #fff;
+    }
+    #char-sprite.is-karrar::after { color: rgba(255,255,255,0.12); }
+
+    #char-sprite.has-img { background: none; border: none; outline: none; }
+    #char-sprite.has-img::after { display: none; }
+
+    /* Slightly larger sprite for the smoke/anon_3 lines */
+    #char-sprite.is-large {
+      width: 520px;
+      height: 680px;
+    }
+    #char-sprite img {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+      /* Dark aesthetic filter approximation while awaiting edited sprites */
+      filter: drop-shadow(0 0 18px rgba(160,160,160,0.6));
+    }
+
+    @keyframes charBob {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50%       { transform: translateX(-50%) translateY(-6px); }
+    }
+
+    /* ── Dialogue box ── */
+    #dialogue-ui {
+      position: absolute; inset: 0;
+      pointer-events: none;
+      display: flex; align-items: flex-end; justify-content: center;
+      padding-bottom: 40px; z-index: 20;
+    }
+    #dialogue-wrap {
+      position: relative;
+      width: min(860px, 92vw);
+      pointer-events: auto;
+    }
+    #char-name {
+      position: absolute;
+      top: -38px; left: 0;
+      background: #0d0d0d;
+      border: 4px solid #fff; outline: 4px solid #000;
+      padding: 5px 18px 4px;
+      font-size: 18px; font-weight: 900;
+      letter-spacing: 2px; color: #fff;
+      text-transform: uppercase; white-space: nowrap;
+    }
+    #char-name.anon-name {
+      border-color: #888;
+      color: #bbb;
+    }
+    #dialogue-box {
+      background: rgba(10,10,14,0.93);
+      border: 4px solid #fff; outline: 4px solid #000;
+      padding: 28px 36px 24px;
+      min-height: 130px; position: relative;
+    }
+    #dialogue-box::before {
+      content: ''; position: absolute;
+      top: -1px; left: 0; right: 0;
+      height: 4px; background: #c0392b;
+    }
+    #dialogue-box.anon-box::before { background: #666; }
+    #dialogue-text {
+      font-size: 19px; line-height: 1.65;
+      color: #f0f0f0; font-weight: 700;
+      letter-spacing: 0.5px; min-height: 3em;
+    }
+    #continue-arrow {
+      position: absolute; right: 22px; bottom: 18px;
+      font-size: 22px; color: #fff;
+      animation: blink 0.8s step-start infinite;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    #continue-arrow.visible { opacity: 1; }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+
+    #player-sprite {
+      transition: left 0.13s linear, top 0.13s linear;
+    }
+    @keyframes walk-bob {
+      0%   { transform: translateY(0px) scaleY(1); }
+      30%  { transform: translateY(-8px) scaleY(1.06); }
+      70%  { transform: translateY(-3px) scaleY(1.02); }
+      100% { transform: translateY(0px) scaleY(1); }
+    }
+    #player-sprite.walking {
+      animation: walk-bob 0.25s ease-out;
+    }
+    @keyframes walk-right {
+      0%   { transform: translateX(0px)  scaleX(1)    scaleY(1); }
+      20%  { transform: translateX(9px)  scaleX(1.14) scaleY(0.91); }
+      60%  { transform: translateX(3px)  scaleX(0.95) scaleY(1.04); }
+      100% { transform: translateX(0px)  scaleX(1)    scaleY(1); }
+    }
+    #player-sprite.walking-right {
+      animation: walk-right 0.25s ease-out;
+    }
+    @keyframes walk-left {
+      0%   { transform: translateX(0px)   scaleX(1)    scaleY(1); }
+      20%  { transform: translateX(-9px)  scaleX(1.14) scaleY(0.91); }
+      60%  { transform: translateX(-3px)  scaleX(0.95) scaleY(1.04); }
+      100% { transform: translateX(0px)   scaleX(1)    scaleY(1); }
+    }
+    #player-sprite.walking-left {
+      animation: walk-left 0.25s ease-out;
+    }
+  </style>
+</head>
+<body>
+
+  <a id="back-btn" href="Base.html">← Menu</a>
+  <div id="penalty-flash"></div>
+  <div id="penalty-popup">-3 STEPS</div>
+
+  <!-- ── GRID PUZZLE ── -->
+  <div id="scene-puzzle" class="scene active">
+    <div class="room-bg"></div>
+    <canvas id="grid-canvas"></canvas>
+    <img id="player-sprite" src="karrar_idle.gif" style="position:absolute;pointer-events:none;display:none;" />
+    <div id="death-overlay" style="position:fixed;inset:0;background:#0d0d0d;opacity:0;pointer-events:none;transition:opacity 0.35s ease;z-index:200;"></div>
+    <div id="puzzle-hud">
+      <div id="puzzle-hint">
+        <span class="key-tag">▲▼◄►</span> / <span class="key-tag">WASD</span>
+        &nbsp;·&nbsp; Push <span class="wall-tag">FEED WALLS</span>
+        &nbsp;·&nbsp; Avoid <span class="toxic-tag">TOXIC COMMENTS</span> (−3 steps)
+      </div>
+      <div id="step-counter">STEPS: <span id="steps">0</span> / <span id="max-display">18</span></div>
+    </div>
+  </div>
+
+  <!-- ── POST-CLEAR DIALOGUE ── -->
+  <div id="scene-dialogue" class="scene">
+    <div class="room-bg"></div>
+    <canvas id="dlg-canvas"></canvas>
+    <div class="vignette"></div>
+    <div id="char-sprite"></div>
+    <div id="dialogue-ui">
+      <div id="dialogue-wrap">
+        <div id="char-name">ANON</div>
+        <div id="dialogue-box">
+          <div id="dialogue-text"></div>
+          <div id="continue-arrow">▼</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STAGE COMPLETE ── -->
+  <div id="scene-complete" class="scene">
+    <div class="complete-title">STAGE <span>CLEAR</span></div>
+    <div class="unlock-box">
+      <div class="unlock-label">New Unlock</div>
+      <div class="unlock-msg">Anonymity &amp; Toxic Behavior Online has been unlocked in Documents.</div>
+    </div>
+    <div style="display:flex; gap:20px;">
+      <a class="btn-back" href="Base.html">← Back to Menu</a>
+      <a class="btn-back" href="Game4.html" style="background:#1a1a2e;">Next Stage →</a>
+    </div>
+  </div>
+
+  <script>
+    const COLS = 9, ROWS = 7;
+    const TILE = 90;
+    const PIXEL = 5;
+    const TOXIC_PENALTY = 3;
+
+    let MAX_STEPS = 18;
+    let steps     = 0;
+    let won       = false;
+    let playerAnim = 'idle';
+    let kickTimer = null;
+
+    const SPRITE_SRCS = {
+      idle:       'karrar_idle.gif',
+      kick_right: 'karrar_kick_right.gif',
+      kick_left:  'karrar_kick_left.gif',
+    };
+    const playerSpriteEl = document.getElementById('player-sprite');
+
+    function setAnim(anim) {
+      if (playerAnim === anim) return;
+      playerAnim = anim;
+      playerSpriteEl.src = SPRITE_SRCS[anim];
+      clearTimeout(kickTimer);
+      if (anim !== 'idle') kickTimer = setTimeout(() => { playerAnim = 'idle'; playerSpriteEl.src = SPRITE_SRCS.idle; }, 320);
+    }
+
+    function positionPlayerSprite(ox, oy) {
+      const ph = TILE * 1.3;
+      const pw = TILE * 0.8;
+      const px = ox + playerPos.x * TILE + TILE / 2 - pw / 2;
+      const py = oy + playerPos.y * TILE + TILE - ph;
+      playerSpriteEl.style.left   = px + 'px';
+      playerSpriteEl.style.top    = py + 'px';
+      playerSpriteEl.style.width  = pw + 'px';
+      playerSpriteEl.style.height = ph + 'px';
+      playerSpriteEl.style.display = 'block';
+    }
+
+    let playerPos = { x: 0, y: 6 };
+    const goalPos  = { x: 8, y: 0 };
+
+    // ── Level layout ──
+    // Feed walls  : pushable cyan cards
+    // Toxic tiles : pink comment bubbles that cost -3 steps on contact
+    //
+    //   Col: 0 1 2 3 4 5 6 7 8
+    // Row 0: . . . . . . . . G
+    // Row 1: W . W . . . W . W   ← gaps at 1,3,4,5,7
+    // Row 2: . . . T . T . . .   ← toxic at 3,5
+    // Row 3: . W . . W . . W .   ← walls at 1,4,7
+    // Row 4: . . T . . . T . .   ← toxic at 2,6
+    // Row 5: W . . W . W . . W   ← walls at 0,3,5,8
+    // Row 6: P . . . . . . . .
+    //
+    // Safe route (~14 steps): col 1 gap → push (1,3) up → col 1 gap in row 1 → across row 0.
+    // Toxic temptation: shortcuts through row 2/4 toxic cost -3 each → tight margin.
+
+    const INITIAL_WALLS = [
+      { x:0, y:1 }, { x:2, y:1 }, { x:6, y:1 }, { x:8, y:1 },
+      { x:1, y:3 }, { x:4, y:3 }, { x:7, y:3 },
+      { x:0, y:5 }, { x:3, y:5 }, { x:5, y:5 }, { x:8, y:5 },
+    ];
+    const INITIAL_TOXIC = [
+      { x:3, y:2 }, { x:5, y:2 },
+      { x:2, y:4 }, { x:6, y:4 },
+    ];
+
+    let feedWalls   = INITIAL_WALLS.map(w => ({ ...w }));
+    let toxicTiles  = INITIAL_TOXIC.map(t => ({ ...t }));
+
+    // Void cells — irregular map border (L-shape)
+    // Stage 3 void: bottom-right staircase cut — opposite corner from Stage 2
+    const VOID_CELLS = [
+      { x:6,y:6 }, { x:7,y:6 }, { x:8,y:6 },
+      { x:7,y:4 }, { x:8,y:4 },
+      { x:7,y:2 }, { x:8,y:2 },
+    ];
+    function isVoid(x, y) { return VOID_CELLS.some(v => v.x === x && v.y === y); }
+
+    const gc   = document.getElementById('grid-canvas');
+    const gctx = gc.getContext('2d');
+
+    const bgImg = new Image();
+    bgImg.src = 'game3_bg.png';
+    bgImg.onload = drawGrid;
+
+    function setupGrid() {
+      gc.width  = window.innerWidth;
+      gc.height = window.innerHeight;
+    }
+    setupGrid();
+    window.addEventListener('resize', () => { setupGrid(); drawGrid(); });
+
+    /* ── Draw feed wall (cyan card) ── */
+    function drawFeedWall(tx, ty) {
+      const pad = 6, r = 4;
+      const x = tx + pad, y = ty + pad;
+      const w = TILE - pad * 2, h = TILE - pad * 2;
+
+      gctx.fillStyle = 'rgba(20,50,80,0.88)';
+      gctx.beginPath(); gctx.roundRect(x, y, w, h, r); gctx.fill();
+
+      gctx.strokeStyle = 'rgba(52,180,219,0.85)';
+      gctx.lineWidth = 2.5;
+      gctx.beginPath(); gctx.roundRect(x, y, w, h, r); gctx.stroke();
+
+      gctx.fillStyle = 'rgba(52,152,219,0.7)';
+      gctx.fillRect(x + r, y, w - r * 2, 3);
+
+      gctx.fillStyle = 'rgba(52,152,219,0.5)';
+      gctx.beginPath();
+      gctx.arc(x + 12, y + 14, 8, 0, Math.PI * 2);
+      gctx.fill();
+      gctx.strokeStyle = 'rgba(127,204,240,0.6)';
+      gctx.lineWidth = 1.5; gctx.stroke();
+
+      gctx.fillStyle = 'rgba(127,204,240,0.55)';
+      const lw1 = w - 34, lw2 = lw1 * 0.65, lw3 = lw1 * 0.8;
+      gctx.fillRect(x + 26, y + 8,  lw1, 3.5);
+      gctx.fillRect(x + 8,  y + 28, lw2, 3);
+      gctx.fillRect(x + 8,  y + 36, lw3, 3);
+      gctx.fillRect(x + 8,  y + 46, lw2 * 0.7, 3);
+
+      gctx.fillStyle = 'rgba(52,152,219,0.4)';
+      for (let i = 0; i < 3; i++) gctx.fillRect(x + 8 + i * 18, y + h - 14, 12, 6);
+    }
+
+    /* ── Draw toxic comment tile ── */
+    function drawToxic(tx, ty) {
+      const pad = 7, r = 6;
+      const x = tx + pad, y = ty + pad;
+      const w = TILE - pad * 2, h = TILE - pad * 2;
+
+      // Dark magenta background
+      gctx.fillStyle = 'rgba(60,10,55,0.92)';
+      gctx.beginPath(); gctx.roundRect(x, y, w, h, r); gctx.fill();
+
+      // Glowing pink border
+      gctx.strokeStyle = 'rgba(192,57,180,0.9)';
+      gctx.lineWidth = 2.5;
+      gctx.beginPath(); gctx.roundRect(x, y, w, h, r); gctx.stroke();
+
+      // Top accent
+      gctx.fillStyle = 'rgba(192,57,180,0.7)';
+      gctx.fillRect(x + r, y, w - r * 2, 3);
+
+      // Speech bubble tail
+      const bx = x + w / 2, by = y + h;
+      gctx.fillStyle = 'rgba(60,10,55,0.92)';
+      gctx.beginPath();
+      gctx.moveTo(bx - 8, by - 2);
+      gctx.lineTo(bx + 8, by - 2);
+      gctx.lineTo(bx,     by + 10);
+      gctx.closePath();
+      gctx.fill();
+      gctx.strokeStyle = 'rgba(192,57,180,0.9)';
+      gctx.lineWidth = 2;
+      gctx.beginPath();
+      gctx.moveTo(bx - 8, by - 2);
+      gctx.lineTo(bx,     by + 10);
+      gctx.lineTo(bx + 8, by - 2);
+      gctx.stroke();
+
+      // "!!!" text
+      gctx.fillStyle = 'rgba(240,127,240,0.95)';
+      gctx.font = `bold ${Math.floor(TILE * 0.28)}px 'Courier New', monospace`;
+      gctx.textAlign = 'center';
+      gctx.textBaseline = 'middle';
+      gctx.fillText('!!!', tx + TILE / 2, ty + TILE / 2 - 4);
+      gctx.textAlign = 'left';
+      gctx.textBaseline = 'alphabetic';
+
+      // Fake angry text lines
+      gctx.fillStyle = 'rgba(240,127,240,0.4)';
+      gctx.fillRect(x + 8, y + h - 20, w - 16, 3);
+      gctx.fillRect(x + 8, y + h - 14, (w - 16) * 0.7, 3);
+    }
+
+    function drawGrid() {
+      const W = gc.width, H = gc.height;
+      gctx.clearRect(0, 0, W, H);
+
+      // Pixelated background
+      if (bgImg.complete && bgImg.naturalWidth > 0) {
+        const scale = Math.max(W / bgImg.width, H / bgImg.height);
+        const sw = bgImg.width * scale, sh = bgImg.height * scale;
+        const bx = (W - sw) / 2, by = (H - sh) / 2;
+        const off = document.createElement('canvas');
+        off.width  = Math.ceil(W / PIXEL);
+        off.height = Math.ceil(H / PIXEL);
+        const octx = off.getContext('2d');
+        octx.filter = 'contrast(1.3) saturate(0.9) brightness(0.65)';
+        octx.drawImage(bgImg, bx / PIXEL, by / PIXEL, sw / PIXEL, sh / PIXEL);
+        gctx.imageSmoothingEnabled = false;
+        gctx.drawImage(off, 0, 0, off.width, off.height, 0, 0, W, H);
+      }
+
+      const gridW = COLS * TILE, gridH = ROWS * TILE;
+      const ox = Math.floor((W - gridW) / 2);
+      const oy = Math.floor((H - gridH) / 2) - 30;
+
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          const tx = ox + col * TILE;
+          const ty = oy + row * TILE;
+
+          const isVoidCell = isVoid(col, row);
+          const isPlayer  = col === playerPos.x && row === playerPos.y;
+          const isGoal    = col === goalPos.x   && row === goalPos.y;
+          const isWall    = feedWalls.some(fw => fw.x === col && fw.y === row);
+          const isToxic   = toxicTiles.some(t  => t.x  === col && t.y  === row);
+
+          if (isVoidCell) {
+            // Game 3 void: dark crimson barbed wire / blocked zone
+            gctx.fillStyle = '#0d0000';
+            gctx.fillRect(tx, ty, TILE, TILE);
+            // Red warning stripes (diagonal)
+            const stripeW = 14;
+            gctx.save();
+            gctx.clip();
+            gctx.strokeStyle = 'rgba(120,10,10,0.7)';
+            gctx.lineWidth = stripeW;
+            for (let si = -TILE; si < TILE * 2; si += stripeW * 2) {
+              gctx.beginPath();
+              gctx.moveTo(tx + si, ty);
+              gctx.lineTo(tx + si + TILE, ty + TILE);
+              gctx.stroke();
+            }
+            gctx.restore();
+            // Dark overlay
+            gctx.fillStyle = 'rgba(10,0,0,0.45)';
+            gctx.fillRect(tx, ty, TILE, TILE);
+            // Red border
+            gctx.strokeStyle = 'rgba(140,20,20,0.9)';
+            gctx.lineWidth = 2;
+            gctx.strokeRect(tx + 1, ty + 1, TILE - 2, TILE - 2);
+            continue;
+          }
+
+          // Tile base
+          gctx.fillStyle = isGoal  ? 'rgba(25,5,5,0.6)'
+                         : isToxic ? 'rgba(192,57,180,0.12)'
+                         : 'rgba(0,0,0,0.28)';
+          gctx.fillRect(tx, ty, TILE, TILE);
+
+          // Tile border
+          gctx.strokeStyle = isGoal  ? 'rgba(180,40,40,0.6)'
+                           : isToxic ? 'rgba(192,57,180,0.25)'
+                           : 'rgba(255,255,255,0.18)';
+          gctx.lineWidth = 1.5;
+          gctx.strokeRect(tx + 0.75, ty + 0.75, TILE - 1.5, TILE - 1.5);
+
+          // Goal — Anonymous: black face, three X marks
+          if (isGoal) {
+            const cx = tx + TILE / 2, cy = ty + TILE / 2 + 2;
+            // Filled black oval
+            gctx.fillStyle = '#0a0a0a';
+            gctx.beginPath();
+            gctx.ellipse(cx, cy, 28, 32, 0, 0, Math.PI * 2);
+            gctx.fill();
+            gctx.strokeStyle = 'rgba(192,57,43,0.5)';
+            gctx.lineWidth = 2;
+            gctx.stroke();
+            // Three X marks
+            const xs = [
+              { x: cx - 14, y: cy },
+              { x: cx,      y: cy },
+              { x: cx + 14, y: cy },
+            ];
+            gctx.strokeStyle = '#c0392b';
+            gctx.lineWidth = 2.5;
+            gctx.lineCap = 'round';
+            xs.forEach(({ x, y }) => {
+              const a = 5;
+              gctx.beginPath();
+              gctx.moveTo(x - a, y - a); gctx.lineTo(x + a, y + a);
+              gctx.moveTo(x + a, y - a); gctx.lineTo(x - a, y + a);
+              gctx.stroke();
+            });
+            gctx.lineCap = 'butt';
+            // Red border glow
+            gctx.strokeStyle = 'rgba(192,57,43,0.75)';
+            gctx.lineWidth = 3;
+            gctx.strokeRect(tx + 2, ty + 2, TILE - 4, TILE - 4);
+          }
+
+          if (isWall)   drawFeedWall(tx, ty);
+          if (isToxic)  drawToxic(tx, ty);
+
+          // player drawn after loop
+        }
+      }
+
+      // Grid border
+      gctx.strokeStyle = '#fff'; gctx.lineWidth = 4;
+      gctx.strokeRect(ox, oy, gridW, gridH);
+      gctx.fillStyle = '#c0392b';
+      gctx.fillRect(ox, oy - 4, gridW, 4);
+
+      // Hitbox outline around player tile
+      const hx = ox + playerPos.x * TILE;
+      const hy = oy + playerPos.y * TILE;
+      gctx.save();
+      gctx.strokeStyle = 'rgba(255,255,255,0.85)';
+      gctx.lineWidth = 2;
+      gctx.strokeRect(hx + 1, hy + 1, TILE - 2, TILE - 2);
+      gctx.strokeStyle = 'rgba(192,57,43,0.7)';
+      gctx.lineWidth = 1.5;
+      gctx.strokeRect(hx + 4, hy + 4, TILE - 8, TILE - 8);
+      gctx.restore();
+
+      positionPlayerSprite(ox, oy);
+
+      // Update HUD
+      document.getElementById('steps').textContent      = steps;
+      document.getElementById('max-display').textContent = MAX_STEPS;
+    }
+
+    const deathOverlay = document.getElementById('death-overlay');
+    function fadeReset() {
+      deathOverlay.style.opacity = '1';
+      setTimeout(() => {
+        resetLevel();
+        setTimeout(() => { deathOverlay.style.opacity = '0'; }, 80);
+      }, 380);
+    }
+
+    function resetLevel() {
+      playerPos  = { x: 0, y: 6 };
+      feedWalls  = INITIAL_WALLS.map(w => ({ ...w }));
+      toxicTiles = INITIAL_TOXIC.map(t => ({ ...t }));
+      MAX_STEPS  = 18;
+      steps      = 0;
+      won        = false;
+      drawGrid();
+    }
+
+    /* ── Penalty flash ── */
+    let flashTimer = null;
+    function showPenalty() {
+      const flash   = document.getElementById('penalty-flash');
+      const popup   = document.getElementById('penalty-popup');
+      flash.classList.add('show');
+      popup.classList.add('show');
+      clearTimeout(flashTimer);
+      flashTimer = setTimeout(() => {
+        flash.classList.remove('show');
+        popup.classList.remove('show');
+      }, 420);
+    }
+
+    /* ── Movement ── */
+    function tryMove(dx, dy) {
+      if (won) return;
+      const nx = playerPos.x + dx;
+      const ny = playerPos.y + dy;
+      if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) return;
+      if (isVoid(nx, ny)) return;
+
+      // Feed wall push
+      const wallIdx = feedWalls.findIndex(fw => fw.x === nx && fw.y === ny);
+      let kicked = false;
+      if (wallIdx >= 0) {
+        const wx = nx + dx, wy = ny + dy;
+        if (wx < 0 || wx >= COLS || wy < 0 || wy >= ROWS) return;
+        if (feedWalls.some(fw => fw.x === wx && fw.y === wy)) return;
+        if (toxicTiles.some(t => t.x === wx && t.y === wy)) return;
+        if (isVoid(wx, wy)) return;
+        feedWalls[wallIdx] = { x: wx, y: wy };
+        setAnim(dx === 1 || dy === -1 ? 'kick_right' : 'kick_left');
+        kicked = true;
+      } else {
+        setAnim('idle');
+        playerPos = { x: nx, y: ny };
+        const walkCls = dx === 1 ? 'walking-right' : dx === -1 ? 'walking-left' : 'walking';
+        playerSpriteEl.classList.remove('walking', 'walking-right', 'walking-left');
+        void playerSpriteEl.offsetWidth;
+        playerSpriteEl.classList.add(walkCls);
+        setTimeout(() => playerSpriteEl.classList.remove(walkCls), 260);
+      }
+
+      steps++;
+
+      // Toxic tile contact (only when player actually moved)
+      const checkX = kicked ? playerPos.x : nx;
+      const checkY = kicked ? playerPos.y : ny;
+      const toxicIdx = toxicTiles.findIndex(t => t.x === checkX && t.y === checkY);
+      if (toxicIdx >= 0) {
+        MAX_STEPS -= TOXIC_PENALTY;
+        toxicTiles.splice(toxicIdx, 1); // consumed
+        showPenalty();
+      }
+
+      drawGrid();
+
+      // Win
+      if (playerPos.x === goalPos.x && playerPos.y === goalPos.y) {
+        won = true;
+        localStorage.setItem('stage3Complete', 'true');
+        setTimeout(() => {
+          document.getElementById('scene-puzzle').classList.remove('active');
+          startDialogue();
+        }, 500);
+        return;
+      }
+
+      // Out of steps
+      if (steps >= MAX_STEPS) fadeReset();
+    }
+
+    document.addEventListener('keydown', e => {
+      if (!document.getElementById('scene-puzzle').classList.contains('active')) return;
+      const dirs = {
+        ArrowUp:    { dx: 0,  dy: -1 },
+        ArrowDown:  { dx: 0,  dy:  1 },
+        ArrowLeft:  { dx: -1, dy:  0 },
+        ArrowRight: { dx:  1, dy:  0 },
+        KeyW:       { dx: 0,  dy: -1 },
+        KeyS:       { dx: 0,  dy:  1 },
+        KeyA:       { dx: -1, dy:  0 },
+        KeyD:       { dx:  1, dy:  0 },
+      };
+      const d = dirs[e.code];
+      if (!d) return;
+      e.preventDefault();
+      tryMove(d.dx, d.dy);
+    });
+
+    /* ══════════════════════════════
+       POST-CLEAR DIALOGUE
+       Sprites: drop edited PNGs into the project folder named:
+         anon_unlit.png  — Image 2 (smug, arms together)
+         anon_idle.png   — Image 1 (cigarette, hand on hip)
+         anon_smoke.png  — Image 3 (blowing smoke, wide grin)
+       CSS filter on the <img> approximates the dark aesthetic
+       until the edited sprites are ready.
+    ══════════════════════════════ */
+    const lines = [
+      // ── Image 2: unlit, smug ──
+      { name: 'ANONYMOUS USER', isAnon: true,  isLarge: false, sprite: 'anon_unlit.png', text: 'ur done lol.' },
+      { name: 'Karrar',         isAnon: false, isLarge: false, sprite: '11.png',          text: 'And yet here I am.' },
+
+      // ── Image 1: idle, cigarette ──
+      { name: 'ANONYMOUS USER', isAnon: true,  isLarge: false, sprite: 'anon_idle.png',  text: 'Say sorry and log off forever.' },
+      { name: 'Karrar',         isAnon: false, isLarge: false, sprite: '4.png',           text: 'For what exactly?' },
+      { name: 'ANONYMOUS USER', isAnon: true,  isLarge: false, sprite: 'anon_idle.png',  text: 'You know what you did.' },
+      { name: 'Karrar',         isAnon: false, isLarge: false, sprite: '7.png',           text: 'I genuinely don\'t.' },
+      { name: 'ANONYMOUS USER', isAnon: true,  isLarge: false, sprite: 'anon_idle.png',  text: 'Liar.' },
+      { name: 'Karrar',         isAnon: false, isLarge: false, sprite: '8.png',           text: 'No evidence, no specifics, just certainty. Impressive.' },
+
+      // ── Image 3: smoke, wide grin ──
+      { name: 'ANONYMOUS USER', isAnon: true,  isLarge: true,  sprite: 'anon_smoke.png', text: 'Defending yourself makes you look guilty.' },
+      { name: 'Karrar',         isAnon: false, isLarge: false, sprite: '1.png',          text: 'And staying silent?' },
+      { name: 'ANONYMOUS USER', isAnon: true,  isLarge: true,  sprite: 'anon_smoke.png', text: 'Also guilty lol.' },
+      { name: 'Karrar',         isAnon: false, isLarge: false, sprite: '7.png',           text: 'So there\'s no version where I\'m innocent.' },
+      { name: 'ANONYMOUS USER', isAnon: true,  isLarge: true,  sprite: 'anon_smoke.png', text: 'Not really, no.' },
+
+      // ── Karrar's closing + ANON reaction ──
+      { name: 'Karrar',         isAnon: false, isLarge: false, sprite: '8.png',           text: 'You get to leave unscathed after this.\nI don\'t.\nSo get out of my way.' },
+      { name: 'ANONYMOUS USER', isAnon: true,  isLarge: false, sprite: 'anon_unlit.png', text: '...' },
+    ];
+
+    const dlgCanvas = document.getElementById('dlg-canvas');
+    const dlgCtx    = dlgCanvas.getContext('2d');
+    const dlgBgImg  = new Image();
+    dlgBgImg.src = 'game3_bg.png';
+
+    function setupDlgBg() {
+      dlgCanvas.width  = window.innerWidth;
+      dlgCanvas.height = window.innerHeight;
+      if (dlgBgImg.complete && dlgBgImg.naturalWidth > 0) renderDlgBg();
+    }
+    function renderDlgBg() {
+      const w = dlgCanvas.width, h = dlgCanvas.height;
+      const scale = Math.max(w / dlgBgImg.width, h / dlgBgImg.height);
+      const sw = dlgBgImg.width * scale, sh = dlgBgImg.height * scale;
+      const ox = (w - sw) / 2, oy = (h - sh) / 2;
+      const off = document.createElement('canvas');
+      off.width  = Math.ceil(w / PIXEL);
+      off.height = Math.ceil(h / PIXEL);
+      const octx = off.getContext('2d');
+      octx.filter = 'contrast(1.4) saturate(0.7) brightness(0.6)';
+      octx.drawImage(dlgBgImg, ox / PIXEL, oy / PIXEL, sw / PIXEL, sh / PIXEL);
+      dlgCtx.imageSmoothingEnabled = false;
+      dlgCtx.drawImage(off, 0, 0, off.width, off.height, 0, 0, w, h);
+    }
+    dlgBgImg.onload = () => {
+      if (document.getElementById('scene-dialogue').classList.contains('active')) setupDlgBg();
+    };
+
+    const textEl   = document.getElementById('dialogue-text');
+    const nameEl   = document.getElementById('char-name');
+    const arrowEl  = document.getElementById('continue-arrow');
+    const spriteEl = document.getElementById('char-sprite');
+    const boxEl    = document.getElementById('dialogue-box');
+
+    let lineIdx = 0, charIdx = 0, typing = false, dlgTimer = null;
+
+    function showLine(idx) {
+      if (idx >= lines.length) {
+        document.getElementById('scene-dialogue').classList.remove('active');
+        document.getElementById('scene-complete').classList.add('active');
+        return;
+      }
+      const line = lines[idx];
+
+      nameEl.textContent = line.name;
+      nameEl.className   = line.isAnon ? 'anon-name' : '';
+      boxEl.className    = line.isAnon ? 'anon-box'  : '';
+
+      spriteEl.innerHTML = '';
+      spriteEl.className = '';
+      if (line.isLarge) spriteEl.classList.add('is-large');
+      if (line.sprite) {
+        spriteEl.classList.add('has-img');
+        const img = document.createElement('img');
+        img.src = line.sprite;
+        spriteEl.appendChild(img);
+      } else {
+        spriteEl.classList.add('is-karrar');
+      }
+
+      textEl.textContent = '';
+      arrowEl.classList.remove('visible');
+      charIdx = 0; typing = true;
+      clearInterval(dlgTimer);
+      dlgTimer = setInterval(() => {
+        const ch = line.text[charIdx++];
+        if (ch === '\n') { textEl.appendChild(document.createElement('br')); }
+        else { textEl.appendChild(document.createTextNode(ch)); }
+        if (charIdx >= line.text.length) {
+          clearInterval(dlgTimer);
+          typing = false;
+          arrowEl.classList.add('visible');
+        }
+      }, 38);
+    }
+
+    function advance() {
+      if (typing) {
+        clearInterval(dlgTimer);
+        textEl.innerHTML = lines[lineIdx].text.replace(/\n/g, '<br>');
+        charIdx = lines[lineIdx].text.length;
+        typing  = false;
+        arrowEl.classList.add('visible');
+      } else {
+        lineIdx++;
+        showLine(lineIdx);
+      }
+    }
+
+    document.getElementById('dialogue-box').addEventListener('click', advance);
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space' || e.code === 'Enter') {
+        if (document.getElementById('scene-dialogue').classList.contains('active')) advance();
+      }
+    });
+
+    function startDialogue() {
+      lineIdx = 0;
+      document.getElementById('scene-dialogue').classList.add('active');
+      setupDlgBg();
+      showLine(0);
+    }
+  </script>
+
+</body>
+</html>

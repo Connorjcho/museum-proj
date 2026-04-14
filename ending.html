@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ending — Internet Controversy</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d0d;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* ── Shared phase layout ── */
+    .phase {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0 max(48px, 12vw);
+      transition: opacity 1.4s ease;
+    }
+
+    /* ── Prose + epilogue phases: left half only ── */
+    #phase-prose,
+    #phase-stars {
+      align-items: flex-start;
+      padding-left: max(60px, 8vw);
+      padding-right: 52%;
+    }
+
+    /* ── Shared line style ── */
+    .line {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: clamp(13px, 1.75vw, 16px);
+      color: #bbb;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      padding: 5px 0;
+      opacity: 0;
+      transition: opacity 1s ease;
+      text-align: left;
+    }
+    .line.visible { opacity: 1; }
+    .line.gap     { padding-top: 22px; }
+    .line.dim     { color: #666; }
+    .line.bright  { color: #e8e8e8; }
+    .line.white   { color: #fff; }
+    .line.label   { color: #383838; font-size: clamp(11px, 1.4vw, 13px); letter-spacing: 3px; }
+
+    /* ══ PHASE 3 — Credits (Game4 stage-complete style) ══ */
+    #phase-credits {
+      opacity: 0; pointer-events: none;
+      transition: opacity 1.8s ease;
+      gap: 32px;
+      font-family: 'Courier New', monospace;
+    }
+    #phase-credits.visible { opacity: 1; pointer-events: auto; }
+
+    #phase-credits .complete-title {
+      font-size: clamp(32px, 6vw, 52px); font-weight: 900;
+      color: #fff; letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+    #phase-credits .complete-title span { color: #c0392b; }
+
+    #phase-credits .unlock-box {
+      border: 4px solid #fff; outline: 4px solid #000;
+      background: rgba(10,10,14,0.95);
+      padding: 28px 48px; text-align: center;
+      position: relative;
+    }
+    #phase-credits .unlock-box::before {
+      content: ''; position: absolute;
+      top: -1px; left: 0; right: 0;
+      height: 4px; background: #c0392b;
+    }
+    #phase-credits .unlock-label {
+      font-size: 13px; letter-spacing: 3px;
+      color: #c0392b; text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    #phase-credits .unlock-msg {
+      font-size: 22px; font-weight: 900;
+      color: #f0f0f0; letter-spacing: 1px;
+    }
+
+    .btn-row {
+      display: flex; gap: 20px;
+      flex-wrap: wrap; justify-content: center;
+    }
+    a.btn-back {
+      font-family: 'Courier New', monospace;
+      font-size: 16px; font-weight: 900;
+      letter-spacing: 3px; text-transform: uppercase;
+      text-decoration: none; color: #fff;
+      background: #c0392b;
+      border: 4px solid #fff; outline: 4px solid #000;
+      padding: 14px 40px;
+      transition: background 0.15s;
+    }
+    a.btn-back:hover { background: #e74c3c; }
+    a.btn-back.secondary {
+      background: #0d0d0d;
+    }
+    a.btn-back.secondary:hover { background: #1a1a1a; }
+
+    /* ── Slideshow image (right half) ── */
+    #slide-wrap {
+      position: fixed;
+      top: 0; bottom: 0;
+      right: 0;
+      width: 46%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 48px 40px 24px;
+      pointer-events: none;
+    }
+    .slide-img {
+      position: absolute;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      opacity: 0;
+      transition: opacity 1.2s ease;
+      border: 2px solid rgba(255,255,255,0.08);
+      box-shadow: 0 0 40px rgba(0,0,0,0.7);
+    }
+    .slide-img.visible { opacity: 1; }
+
+    /* ── Special thanks ── */
+    #special-thanks {
+      position: fixed;
+      bottom: 32px;
+      left: 0; right: 0;
+      text-align: center;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: clamp(11px, 1.3vw, 14px);
+      letter-spacing: 3px;
+      color: rgba(255,255,255,0.35);
+      opacity: 0;
+      transition: opacity 1.4s ease;
+      pointer-events: none;
+      z-index: 10;
+    }
+    #special-thanks.visible { opacity: 1; }
+
+    /* Scanlines */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px, transparent 3px,
+        rgba(0,0,0,0.07) 3px, rgba(0,0,0,0.07) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══ PHASE 1: Prose ══
+       Consecutive lines: +700ms
+       Gap between blocks: +1800ms
+  ══ -->
+  <div id="phase-prose" class="phase">
+    <div class="line"        data-delay="1000" >The comments are still there.</div>
+    <div class="line"        data-delay="2000">The numbers keep climbing.</div>
+    <div class="line bright" data-delay="3000">But he doesn't refresh the page.</div>
+
+    <div class="line gap"    data-delay="4000">Instead, he opens a new document</div>
+    <div class="line"        data-delay="5000">and starts writing.</div>
+
+    <div class="line gap"    data-delay="6000">For the next person.</div>
+    <div class="line"        data-delay="7000">Reading their name in a hashtag</div>
+    <div class="line dim"    data-delay="8000">for the first time.</div>
+  </div>
+
+  <!-- ══ PHASE 2: Epilogue ══ -->
+  <div id="phase-stars" class="phase" style="opacity:0; pointer-events:none;">
+    <div class="line"        data-sdelay="1000" >Karrar kept making videos.</div>
+    <div class="line dim"    data-sdelay="2000">The internet moved on.</div>
+
+    <div class="line gap"    data-sdelay="3000">He didn't forget.</div>
+    <div class="line"        data-sdelay="4000">But he kept going anyway.</div>
+
+    <div class="line gap dim"data-sdelay="4500">...</div>
+
+    <div class="line gap"    data-sdelay="5400">You reached the end.</div>
+    <div class="line white"  data-sdelay="6300">Thank you for walking with him.</div>
+  </div>
+
+  <!-- ══ Slideshow images (right half, both phases) ══ -->
+  <div id="slide-wrap">
+    <!-- Order: 6 (head down) → 4 → 3 → 5 → 1 → 2 -->
+    <img class="slide-img" id="s1" src="end_6.png" />
+    <img class="slide-img" id="s2" src="end_4.png" />
+    <img class="slide-img" id="s3" src="end_3.png" />
+    <img class="slide-img" id="s4" src="end_5.png" />
+    <img class="slide-img" id="s5" src="end_1.png" />
+    <img class="slide-img" id="s6" src="end_2.png" />
+  </div>
+
+  <div id="special-thanks">SPECIAL THANKS TO KARRAR HAYDER KADHIM</div>
+
+  <!-- ══ PHASE 3: Credits ══ -->
+  <div id="phase-credits" class="phase">
+    <div class="complete-title">INTERNET <span>CONTROVERSY</span></div>
+    <div class="unlock-box">
+      <div class="unlock-label">Created by</div>
+      <div class="unlock-msg">Connor Cho</div>
+    </div>
+    <div class="btn-row">
+      <a class="btn-back" href="Base.html">← Back to Menu</a>
+      <a class="btn-back secondary" href="Essay.html">Documents</a>
+    </div>
+  </div>
+
+  <script>
+    // ── Slideshow helpers ──
+    const slides = [1,2,3,4,5,6].map(n => document.getElementById('s' + n));
+    let currentSlide = -1;
+    function showSlide(idx) {
+      if (currentSlide === idx) return;
+      if (currentSlide >= 0) slides[currentSlide].classList.remove('visible');
+      currentSlide = idx;
+      if (idx >= 0) slides[idx].classList.add('visible');
+    }
+
+    // Mark ending reached + all stages complete
+    localStorage.setItem('essayUnlocked', 'true');
+    localStorage.setItem('endingComplete', 'true');
+    localStorage.setItem('stage2Complete', 'true');
+    localStorage.setItem('stage3Complete', 'true');
+    localStorage.setItem('stage4Complete', 'true');
+
+    const proseEl   = document.getElementById('phase-prose');
+    const starsEl   = document.getElementById('phase-stars');
+    const creditsEl = document.getElementById('phase-credits');
+
+    // ── Phase 1 ──
+    const proseLines = Array.from(proseEl.querySelectorAll('.line'));
+    proseLines.forEach(el =>
+      setTimeout(() => el.classList.add('visible'), parseInt(el.dataset.delay, 10))
+    );
+    const proseEnd = Math.max(...proseLines.map(el => parseInt(el.dataset.delay, 10)));
+
+    // Slide 0 at start, slide 1 after first block, slide 2 after second block
+    showSlide(0);
+    setTimeout(() => showSlide(1), 4000);
+    setTimeout(() => showSlide(2), 6000);
+
+    // Special thanks fades in with the first line
+    const thanksEl = document.getElementById('special-thanks');
+    setTimeout(() => thanksEl.classList.add('visible'), 1000);
+
+    // ── Prose → Epilogue (fade out, then fade in) ──
+    setTimeout(() => {
+      proseEl.style.opacity = '0';
+      proseEl.style.pointerEvents = 'none';
+      setTimeout(() => {
+        proseEl.style.display = 'none';
+        starsEl.style.opacity = '1';
+        showSlide(3);
+
+        // ── Phase 2 ──
+        const starLines = Array.from(starsEl.querySelectorAll('.line'));
+        starLines.forEach(el =>
+          setTimeout(() => el.classList.add('visible'), parseInt(el.dataset.sdelay, 10))
+        );
+        const starsEnd = Math.max(...starLines.map(el => parseInt(el.dataset.sdelay, 10)));
+
+        setTimeout(() => showSlide(4), 3000);
+        setTimeout(() => showSlide(5), 5400);
+
+        // ── Epilogue → Credits ──
+        setTimeout(() => {
+          starsEl.style.opacity = '0';
+          starsEl.style.pointerEvents = 'none';
+          setTimeout(() => {
+            starsEl.style.display = 'none';
+            showSlide(-1); // hide images on credits
+            thanksEl.classList.remove('visible');
+            creditsEl.querySelectorAll('.line').forEach(el => el.classList.add('visible'));
+            creditsEl.classList.add('visible');
+          }, 1800);
+        }, starsEnd + 2600);
+
+      }, 1400);
+    }, proseEnd + 2400);
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Internet Controversy — Stage 2</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d0d;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Courier New', monospace;
+    }
+
+    /* ── SCENE WRAPPER ── */
+    .scene {
+      position: fixed;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+    }
+    .scene.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* ── Persistent back button ── */
+    #back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 100;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: #fff;
+      background: rgba(10,10,14,0.85);
+      border: 3px solid #fff;
+      outline: 3px solid #000;
+      padding: 8px 20px;
+      transition: background 0.15s;
+    }
+    #back-btn:hover { background: #c0392b; }
+
+    /* ══════════════════════════════
+       SCENE — GRID PUZZLE
+    ══════════════════════════════ */
+    #scene-puzzle .room-bg {
+      position: absolute;
+      inset: 0;
+      background-image: url('game2_bg.png');
+      background-size: cover;
+      background-position: center center;
+      filter: blur(3px) brightness(0.7);
+      transform: scale(1.04);
+    }
+
+    #grid-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+    }
+
+    #puzzle-hud {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(10,10,14,0.92);
+      border-top: 4px solid #fff;
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 30;
+    }
+    #puzzle-hud::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: 0; right: 0;
+      height: 4px;
+      background: #c0392b;
+      pointer-events: none;
+    }
+    #puzzle-hint {
+      font-size: 16px; font-weight: 700;
+      color: #f0f0f0; letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    #puzzle-hint span {
+      display: inline-block;
+      background: #fff; color: #0d0d0d;
+      padding: 2px 8px; margin: 0 3px;
+      font-weight: 900; font-size: 14px;
+    }
+    #puzzle-hint .wall-tag {
+      background: rgba(52,152,219,0.3);
+      border: 2px solid #3498db;
+      color: #7fccf0;
+      padding: 2px 8px; margin: 0 3px;
+    }
+    #step-counter {
+      font-size: 16px; font-weight: 900;
+      color: #c0392b; letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* ══════════════════════════════
+       SCENE — DIALOGUE (post-clear)
+    ══════════════════════════════ */
+    #scene-dialogue .room-bg {
+      position: absolute;
+      inset: 0;
+      background-image: url('game2_bg.png');
+      background-size: cover;
+      background-position: center center;
+      filter: blur(3px) brightness(0.75);
+      transform: scale(1.04);
+    }
+
+    #scene-dialogue canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+    }
+
+    .vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.7) 100%);
+      pointer-events: none;
+    }
+
+    #char-sprite {
+      position: absolute;
+      left: 50%;
+      bottom: 8vh;
+      transform: translateX(-50%);
+      width: 440px;
+      height: 600px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      background: linear-gradient(160deg, #0a1a2e 0%, #050d1a 100%);
+      border: 4px solid #3498db;
+      outline: 4px solid #000;
+      image-rendering: pixelated;
+      animation: charBob 3s ease-in-out infinite;
+      z-index: 10;
+    }
+    #char-sprite::after {
+      content: '?';
+      font-size: 140px; font-weight: 900;
+      color: rgba(52,152,219,0.2);
+      line-height: 1;
+      margin-bottom: 30px;
+    }
+    #char-sprite.has-img,
+    #char-sprite.is-algorithm.has-img { background: none; border: none; outline: none; box-shadow: none; }
+    #char-sprite.has-img::after,
+    #char-sprite.is-algorithm.has-img::after { display: none; }
+    #char-sprite img {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+    #char-sprite.is-algorithm {
+      background: linear-gradient(160deg, #0a1a2e 0%, #050d1a 100%);
+      border: 4px solid #3498db;
+      outline: 4px solid #000;
+      box-shadow: 0 0 30px rgba(52,152,219,0.4), inset 0 0 40px rgba(52,152,219,0.08);
+    }
+    #char-sprite.is-algorithm::after {
+      content: 'AI';
+      font-size: 100px; font-weight: 900;
+      color: rgba(52,152,219,0.35);
+      letter-spacing: 8px;
+    }
+
+    @keyframes charBob {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50%       { transform: translateX(-50%) translateY(-6px); }
+    }
+
+    #glitch-canvas {
+      position: absolute;
+      pointer-events: none;
+      z-index: 25;
+      mix-blend-mode: screen;
+    }
+
+    #dialogue-ui {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 40px;
+      z-index: 20;
+    }
+    #dialogue-wrap {
+      position: relative;
+      width: min(860px, 92vw);
+      pointer-events: auto;
+    }
+    #char-name {
+      position: absolute;
+      top: -38px; left: 0;
+      background: #0d0d0d;
+      border: 4px solid #fff;
+      outline: 4px solid #000;
+      padding: 5px 18px 4px;
+      font-size: 18px; font-weight: 900;
+      letter-spacing: 2px; color: #fff;
+      text-transform: uppercase; white-space: nowrap;
+    }
+    #char-name.algorithm-name {
+      border-color: #3498db;
+      color: #7fccf0;
+    }
+    #dialogue-box {
+      background: rgba(10,10,14,0.93);
+      border: 4px solid #fff;
+      outline: 4px solid #000;
+      padding: 28px 36px 24px;
+      min-height: 130px;
+      position: relative;
+    }
+    #dialogue-box::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: 0; right: 0;
+      height: 4px;
+      background: #c0392b;
+    }
+    #dialogue-box.algorithm-box::before {
+      background: #3498db;
+    }
+    #dialogue-text {
+      font-size: 19px; line-height: 1.65;
+      color: #f0f0f0; font-weight: 700;
+      letter-spacing: 0.5px; min-height: 3em;
+    }
+    #continue-arrow {
+      position: absolute; right: 22px; bottom: 18px;
+      font-size: 22px; color: #fff;
+      animation: blink 0.8s step-start infinite;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    #continue-arrow.visible { opacity: 1; }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+
+    /* ══════════════════════════════
+       SCENE — STAGE COMPLETE
+    ══════════════════════════════ */
+    #scene-complete {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      background: #0d0d0d;
+    }
+
+    #scene-complete .complete-title {
+      font-size: 52px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+    #scene-complete .complete-title span { color: #c0392b; }
+
+    #scene-complete .unlock-box {
+      border: 4px solid #fff;
+      outline: 4px solid #000;
+      background: rgba(10,10,14,0.95);
+      padding: 28px 48px;
+      text-align: center;
+      position: relative;
+    }
+    #scene-complete .unlock-box::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: 0; right: 0;
+      height: 4px;
+      background: #c0392b;
+    }
+    #scene-complete .unlock-label {
+      font-size: 13px;
+      letter-spacing: 3px;
+      color: #c0392b;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    #scene-complete .unlock-msg {
+      font-size: 22px;
+      font-weight: 900;
+      color: #f0f0f0;
+      letter-spacing: 1px;
+    }
+
+    #scene-complete .btn-back {
+      font-family: 'Courier New', monospace;
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: #fff;
+      background: #c0392b;
+      border: 4px solid #fff;
+      outline: 4px solid #000;
+      padding: 14px 40px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #scene-complete .btn-back:hover { background: #e74c3c; }
+
+    /* ── Player sprite transitions & movement animations ── */
+    #player-sprite {
+      transition: left 0.13s linear, top 0.13s linear;
+    }
+    @keyframes walk-bob {
+      0%   { transform: translateY(0px) scaleY(1); }
+      30%  { transform: translateY(-8px) scaleY(1.06); }
+      70%  { transform: translateY(-3px) scaleY(1.02); }
+      100% { transform: translateY(0px) scaleY(1); }
+    }
+    #player-sprite.walking {
+      animation: walk-bob 0.25s ease-out;
+    }
+    @keyframes walk-right {
+      0%   { transform: translateX(0px)  scaleX(1)    scaleY(1); }
+      20%  { transform: translateX(9px)  scaleX(1.14) scaleY(0.91); }
+      60%  { transform: translateX(3px)  scaleX(0.95) scaleY(1.04); }
+      100% { transform: translateX(0px)  scaleX(1)    scaleY(1); }
+    }
+    #player-sprite.walking-right {
+      animation: walk-right 0.25s ease-out;
+    }
+    @keyframes walk-left {
+      0%   { transform: translateX(0px)   scaleX(1)    scaleY(1); }
+      20%  { transform: translateX(-9px)  scaleX(1.14) scaleY(0.91); }
+      60%  { transform: translateX(-3px)  scaleX(0.95) scaleY(1.04); }
+      100% { transform: translateX(0px)   scaleX(1)    scaleY(1); }
+    }
+    #player-sprite.walking-left {
+      animation: walk-left 0.25s ease-out;
+    }
+  </style>
+</head>
+<body>
+
+  <a id="back-btn" href="Base.html">← Menu</a>
+
+  <!-- ── SCENE 1: GRID PUZZLE ── -->
+  <div id="scene-puzzle" class="scene active">
+    <div class="room-bg"></div>
+    <canvas id="grid-canvas"></canvas>
+    <img id="player-sprite" src="karrar_idle.gif" style="position:absolute;pointer-events:none;display:none;" />
+    <div id="death-overlay" style="position:fixed;inset:0;background:#0d0d0d;opacity:0;pointer-events:none;transition:opacity 0.35s ease;z-index:200;"></div>
+    <div id="puzzle-hud">
+      <div id="puzzle-hint">
+        <span>▲▼◄►</span> / <span>WASD</span> to move &nbsp;·&nbsp;
+        Push <span class="wall-tag">FEED WALLS</span> out of the way
+      </div>
+      <div id="step-counter">STEPS: <span id="steps">0</span> / 16</div>
+    </div>
+  </div>
+
+  <!-- ── SCENE 2: DIALOGUE (post-clear) ── -->
+  <div id="scene-dialogue" class="scene">
+    <div class="room-bg"></div>
+    <canvas id="dlg-canvas"></canvas>
+    <div class="vignette"></div>
+    <div id="char-sprite"></div>
+    <canvas id="glitch-canvas"></canvas>
+    <div id="dialogue-ui">
+      <div id="dialogue-wrap">
+        <div id="char-name">ALGORITHM</div>
+        <div id="dialogue-box">
+          <div id="dialogue-text"></div>
+          <div id="continue-arrow">▼</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCENE 3: STAGE COMPLETE ── -->
+  <div id="scene-complete" class="scene">
+    <div class="complete-title">STAGE <span>CLEAR</span></div>
+    <div class="unlock-box">
+      <div class="unlock-label">New Unlock</div>
+      <div class="unlock-msg">Social Media Algorithm & Echo Chambers has been unlocked in Documents.</div>
+    </div>
+    <div style="display:flex; gap:20px;">
+      <a class="btn-back" href="Base.html">← Back to Menu</a>
+      <a class="btn-back" href="Game3.html" style="background:#1a1a2e;">Next Stage →</a>
+    </div>
+  </div>
+
+  <script>
+    /* ══════════════════════════════
+       SCENE 1 — GRID PUZZLE
+    ══════════════════════════════ */
+    const COLS = 9, ROWS = 7;
+    const TILE = 90;
+    const MAX_STEPS = 16;
+    const PIXEL = 5;
+
+    let playerPos = { x: 0, y: 6 };
+    const goalPos  = { x: 8, y: 0 };
+
+    // Void cells — outside the playable area, creates an L-shaped map.
+    // Row 0 left side void → player must reach col 5+ before ascending to row 0.
+    // Row 6 right side void → can't drift right in starting row.
+    // Stage 2 void: top-left staircase cut — forces player rightward to navigate
+    const VOID_CELLS = [
+      { x:0,y:0 }, { x:1,y:0 }, { x:2,y:0 }, { x:3,y:0 }, { x:4,y:0 },
+      { x:0,y:2 }, { x:1,y:2 }, { x:2,y:2 },
+    ];
+    function isVoid(x, y) { return VOID_CELLS.some(v => v.x === x && v.y === y); }
+
+    // Harder map: narrow gaps, requires specific wall pushes to navigate.
+    // Row 5: gaps only at col 2 and col 5 → forces player to col 2 or col 5 first.
+    // Row 3: walls at cols 2,3,5,6 → player must push to open a path upward.
+    // Row 1: gaps only at col 3 and col 8 → must align with col 3 via pushes.
+    // Optimal path (~15 steps): col 2 gap → push wall at (2,3) up → push (3,3) right → col 3 gap.
+    let feedWalls = [
+      // Row 5 — heavy blocker, gaps at col 2 and col 5 only
+      { x:0, y:5 }, { x:1, y:5 }, { x:3, y:5 },
+      { x:4, y:5 }, { x:6, y:5 }, { x:7, y:5 }, { x:8, y:5 },
+      // Row 3 — center cluster, gaps at 0,1,4,7,8
+      { x:2, y:3 }, { x:3, y:3 }, { x:5, y:3 }, { x:6, y:3 },
+      // Row 1 — heavy blocker, gaps at col 3 and col 8 only
+      { x:0, y:1 }, { x:1, y:1 }, { x:2, y:1 },
+      { x:4, y:1 }, { x:5, y:1 }, { x:6, y:1 }, { x:7, y:1 },
+    ];
+
+    let steps = 0;
+    let won   = false;
+    let playerAnim = 'idle'; // 'idle' | 'kick_right' | 'kick_left'
+    let kickTimer = null;
+
+    // Player sprites
+    const SPRITE_SRCS = {
+      idle:       'karrar_idle.gif',
+      kick_right: 'karrar_kick_right.gif',
+      kick_left:  'karrar_kick_left.gif',
+    };
+    const playerSpriteEl = document.getElementById('player-sprite');
+
+    function setAnim(anim) {
+      if (playerAnim === anim) return;
+      playerAnim = anim;
+      playerSpriteEl.src = SPRITE_SRCS[anim];
+      clearTimeout(kickTimer);
+      if (anim !== 'idle') kickTimer = setTimeout(() => { playerAnim = 'idle'; playerSpriteEl.src = SPRITE_SRCS.idle; }, 320);
+    }
+
+    function positionPlayerSprite(ox, oy) {
+      const ph = TILE * 1.3;     // height: slightly taller than one tile
+      const pw = TILE * 0.8;     // width proportional
+      const px = ox + playerPos.x * TILE + TILE / 2 - pw / 2;
+      const py = oy + playerPos.y * TILE + TILE - ph;
+      playerSpriteEl.style.left   = px + 'px';
+      playerSpriteEl.style.top    = py + 'px';
+      playerSpriteEl.style.width  = pw + 'px';
+      playerSpriteEl.style.height = ph + 'px';
+      playerSpriteEl.style.display = 'block';
+    }
+
+    const gc   = document.getElementById('grid-canvas');
+    const gctx = gc.getContext('2d');
+
+    const tutBgImg = new Image();
+    tutBgImg.src = 'game2_bg.png';
+    tutBgImg.onload = drawGrid;
+
+    function setupGrid() {
+      gc.width  = window.innerWidth;
+      gc.height = window.innerHeight;
+    }
+    setupGrid();
+    window.addEventListener('resize', () => { setupGrid(); drawGrid(); setupDlgBg(); });
+
+    function drawFeedWall(tx, ty) {
+      const pad = 6, r = 4;
+      const x = tx + pad, y = ty + pad;
+      const w = TILE - pad * 2, h = TILE - pad * 2;
+
+      gctx.fillStyle = 'rgba(20,50,80,0.88)';
+      gctx.beginPath();
+      gctx.roundRect(x, y, w, h, r);
+      gctx.fill();
+
+      gctx.strokeStyle = 'rgba(52,180,219,0.85)';
+      gctx.lineWidth = 2.5;
+      gctx.beginPath();
+      gctx.roundRect(x, y, w, h, r);
+      gctx.stroke();
+
+      gctx.fillStyle = 'rgba(52,152,219,0.7)';
+      gctx.fillRect(x + r, y, w - r * 2, 3);
+
+      const avX = x + 12, avY = y + 14, avR = 8;
+      gctx.fillStyle = 'rgba(52,152,219,0.5)';
+      gctx.beginPath();
+      gctx.arc(avX, avY, avR, 0, Math.PI * 2);
+      gctx.fill();
+      gctx.strokeStyle = 'rgba(127,204,240,0.6)';
+      gctx.lineWidth = 1.5;
+      gctx.stroke();
+
+      gctx.fillStyle = 'rgba(127,204,240,0.55)';
+      const lx = x + 26, lw1 = w - 34, lw2 = (w - 34) * 0.65, lw3 = (w - 34) * 0.8;
+      gctx.fillRect(lx, y + 8,  lw1, 3.5);
+      gctx.fillRect(x + 8, y + 28, lw2, 3);
+      gctx.fillRect(x + 8, y + 36, lw3, 3);
+      gctx.fillRect(x + 8, y + 46, lw2 * 0.7, 3);
+
+      gctx.fillStyle = 'rgba(52,152,219,0.4)';
+      for (let i = 0; i < 3; i++) {
+        gctx.fillRect(x + 8 + i * 18, y + h - 14, 12, 6);
+      }
+    }
+
+    function drawGrid() {
+      const W = gc.width, H = gc.height;
+      gctx.clearRect(0, 0, W, H);
+
+      if (tutBgImg.complete && tutBgImg.naturalWidth > 0) {
+        const scale = Math.max(W / tutBgImg.width, H / tutBgImg.height);
+        const sw = tutBgImg.width * scale, sh = tutBgImg.height * scale;
+        const bx = (W - sw) / 2, by = (H - sh) / 2;
+        const off = document.createElement('canvas');
+        off.width  = Math.ceil(W / PIXEL);
+        off.height = Math.ceil(H / PIXEL);
+        const octx = off.getContext('2d');
+        octx.filter = 'contrast(1.3) saturate(0.8) brightness(0.7)';
+        octx.drawImage(tutBgImg, bx / PIXEL, by / PIXEL, sw / PIXEL, sh / PIXEL);
+        gctx.imageSmoothingEnabled = false;
+        gctx.drawImage(off, 0, 0, off.width, off.height, 0, 0, W, H);
+      }
+
+      const gridW = COLS * TILE;
+      const gridH = ROWS * TILE;
+      const ox = Math.floor((W - gridW) / 2);
+      const oy = Math.floor((H - gridH) / 2) - 30;
+
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          const tx = ox + col * TILE;
+          const ty = oy + row * TILE;
+
+          const isVoidCell = isVoid(col, row);
+          const isPlayer   = col === playerPos.x && row === playerPos.y;
+          const isGoal     = col === goalPos.x   && row === goalPos.y;
+          const isFeedWall = feedWalls.some(fw => fw.x === col && fw.y === row);
+
+          if (isVoidCell) {
+            // Game 2 void: deep blue-black brick wall
+            gctx.fillStyle = '#020a14';
+            gctx.fillRect(tx, ty, TILE, TILE);
+            // Brick rows
+            gctx.strokeStyle = 'rgba(20,60,100,0.8)';
+            gctx.lineWidth = 2;
+            const bh = 18;
+            for (let by2 = ty; by2 < ty + TILE; by2 += bh) {
+              gctx.beginPath(); gctx.moveTo(tx, by2); gctx.lineTo(tx + TILE, by2); gctx.stroke();
+            }
+            const bw2 = 30;
+            for (let br = 0; br * bh < TILE; br++) {
+              const offX = (br % 2) * 15;
+              for (let bx2 = tx + offX; bx2 < tx + TILE; bx2 += bw2) {
+                gctx.beginPath(); gctx.moveTo(bx2, ty + br * bh); gctx.lineTo(bx2, ty + (br + 1) * bh); gctx.stroke();
+              }
+            }
+            // Faint blue tint overlay
+            gctx.fillStyle = 'rgba(10,40,80,0.25)';
+            gctx.fillRect(tx, ty, TILE, TILE);
+            continue;
+          }
+
+          gctx.fillStyle = isGoal  ? 'rgba(0,40,20,0.55)'
+                         : 'rgba(0,0,0,0.28)';
+          gctx.fillRect(tx, ty, TILE, TILE);
+
+          gctx.strokeStyle = isGoal ? 'rgba(0,255,65,0.5)' : 'rgba(255,255,255,0.18)';
+          gctx.lineWidth = 1.5;
+          gctx.strokeRect(tx + 0.75, ty + 0.75, TILE - 1.5, TILE - 1.5);
+
+          // Goal — Algorithm: rising bar chart
+          if (isGoal) {
+            const cx = tx + TILE / 2, cy = ty + TILE / 2;
+            // Rising bars (algorithm engagement trending up)
+            const bars = [0.35, 0.55, 0.75, 1.0];
+            const bw = 10, gap = 5;
+            const totalW = bars.length * bw + (bars.length - 1) * gap;
+            const startX = cx - totalW / 2;
+            const maxH = 38, baseY = cy + 22;
+            bars.forEach((h, i) => {
+              const bh = Math.round(maxH * h);
+              const bx2 = startX + i * (bw + gap);
+              const alpha = 0.3 + h * 0.7;
+              gctx.fillStyle = `rgba(0,255,65,${alpha.toFixed(2)})`;
+              gctx.fillRect(bx2, baseY - bh, bw, bh);
+            });
+            // Upward trend arrow above bars
+            gctx.fillStyle = 'rgba(0,255,65,0.9)';
+            gctx.beginPath();
+            gctx.moveTo(cx - 8, cy - 22);
+            gctx.lineTo(cx,     cy - 34);
+            gctx.lineTo(cx + 8, cy - 22);
+            gctx.closePath();
+            gctx.fill();
+            // Green border glow
+            gctx.strokeStyle = 'rgba(0,255,65,0.7)';
+            gctx.lineWidth = 3;
+            gctx.strokeRect(tx + 2, ty + 2, TILE - 4, TILE - 4);
+          }
+
+          if (isFeedWall) drawFeedWall(tx, ty);
+
+          // player drawn after loop
+        }
+      }
+
+      gctx.strokeStyle = '#fff';
+      gctx.lineWidth = 4;
+      gctx.strokeRect(ox, oy, gridW, gridH);
+      gctx.fillStyle = '#c0392b';
+      gctx.fillRect(ox, oy - 4, gridW, 4);
+
+      // Hitbox outline around player tile
+      const hx = ox + playerPos.x * TILE;
+      const hy = oy + playerPos.y * TILE;
+      gctx.save();
+      gctx.strokeStyle = 'rgba(255,255,255,0.85)';
+      gctx.lineWidth = 2;
+      gctx.strokeRect(hx + 1, hy + 1, TILE - 2, TILE - 2);
+      gctx.strokeStyle = 'rgba(192,57,43,0.7)';
+      gctx.lineWidth = 1.5;
+      gctx.strokeRect(hx + 4, hy + 4, TILE - 8, TILE - 8);
+      gctx.restore();
+
+      // Position the player <img> overlay (GIF animates natively in img tag)
+      positionPlayerSprite(ox, oy);
+
+      document.getElementById('steps').textContent = steps;
+    }
+
+    const deathOverlay = document.getElementById('death-overlay');
+    function fadeReset() {
+      deathOverlay.style.opacity = '1';
+      setTimeout(() => {
+        resetLevel();
+        setTimeout(() => { deathOverlay.style.opacity = '0'; }, 80);
+      }, 380);
+    }
+
+    function resetLevel() {
+      playerPos = { x: 0, y: 6 };
+      feedWalls = [
+        { x:0, y:5 }, { x:1, y:5 }, { x:3, y:5 },
+        { x:4, y:5 }, { x:6, y:5 }, { x:7, y:5 }, { x:8, y:5 },
+        { x:2, y:3 }, { x:3, y:3 }, { x:5, y:3 }, { x:6, y:3 },
+        { x:0, y:1 }, { x:1, y:1 }, { x:2, y:1 },
+        { x:4, y:1 }, { x:5, y:1 }, { x:6, y:1 }, { x:7, y:1 },
+      ];
+      steps = 0;
+      won   = false;
+      drawGrid();
+    }
+
+    function tryMove(dx, dy) {
+      if (won) return;
+      const nx = playerPos.x + dx;
+      const ny = playerPos.y + dy;
+      if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) return;
+      if (isVoid(nx, ny)) return;
+
+      const wallIdx = feedWalls.findIndex(fw => fw.x === nx && fw.y === ny);
+      let kicked = false;
+      if (wallIdx >= 0) {
+        const wx = nx + dx, wy = ny + dy;
+        if (wx < 0 || wx >= COLS || wy < 0 || wy >= ROWS) return;
+        if (feedWalls.some(fw => fw.x === wx && fw.y === wy)) return;
+        if (isVoid(wx, wy)) return;
+        feedWalls[wallIdx] = { x: wx, y: wy };
+        // Helltaker-style: player stays in place, only block moves
+        setAnim(dx === 1 || dy === -1 ? 'kick_right' : 'kick_left');
+        kicked = true;
+      } else {
+        setAnim('idle');
+        playerPos = { x: nx, y: ny };
+        // Walk bob animation
+        const walkCls = dx === 1 ? 'walking-right' : dx === -1 ? 'walking-left' : 'walking';
+        playerSpriteEl.classList.remove('walking', 'walking-right', 'walking-left');
+        void playerSpriteEl.offsetWidth;
+        playerSpriteEl.classList.add(walkCls);
+        setTimeout(() => playerSpriteEl.classList.remove(walkCls), 260);
+      }
+      steps++;
+      drawGrid();
+
+      if (playerPos.x === goalPos.x && playerPos.y === goalPos.y) {
+        won = true;
+        localStorage.setItem('stage2Complete', 'true');
+        setTimeout(() => {
+          document.getElementById('scene-puzzle').classList.remove('active');
+          startDialogue();
+        }, 500);
+        return;
+      }
+
+      if (steps >= MAX_STEPS) fadeReset();
+    }
+
+    document.addEventListener('keydown', e => {
+      if (!document.getElementById('scene-puzzle').classList.contains('active')) return;
+      const dirs = {
+        ArrowUp:    { dx: 0,  dy: -1 },
+        ArrowDown:  { dx: 0,  dy:  1 },
+        ArrowLeft:  { dx: -1, dy:  0 },
+        ArrowRight: { dx:  1, dy:  0 },
+        KeyW:       { dx: 0,  dy: -1 },
+        KeyS:       { dx: 0,  dy:  1 },
+        KeyA:       { dx: -1, dy:  0 },
+        KeyD:       { dx:  1, dy:  0 },
+      };
+      const d = dirs[e.code];
+      if (!d) return;
+      e.preventDefault();
+      tryMove(d.dx, d.dy);
+    });
+
+    /* ══════════════════════════════
+       SCENE 2 — POST-CLEAR DIALOGUE
+    ══════════════════════════════ */
+    const dlgCanvas = document.getElementById('dlg-canvas');
+    const dlgCtx    = dlgCanvas.getContext('2d');
+    const dlgBgImg  = new Image();
+    dlgBgImg.src = 'game2_bg.png';
+
+    function setupDlgBg() {
+      dlgCanvas.width  = window.innerWidth;
+      dlgCanvas.height = window.innerHeight;
+      if (dlgBgImg.complete && dlgBgImg.naturalWidth > 0) renderDlgBg();
+    }
+
+    function renderDlgBg() {
+      const w = dlgCanvas.width, h = dlgCanvas.height;
+      const scale = Math.max(w / dlgBgImg.width, h / dlgBgImg.height);
+      const sw = dlgBgImg.width * scale, sh = dlgBgImg.height * scale;
+      const ox = (w - sw) / 2, oy = (h - sh) / 2;
+      const off = document.createElement('canvas');
+      off.width  = Math.ceil(w / PIXEL);
+      off.height = Math.ceil(h / PIXEL);
+      const octx = off.getContext('2d');
+      octx.filter = 'contrast(1.4) saturate(0.6) brightness(0.75)';
+      octx.drawImage(dlgBgImg, ox / PIXEL, oy / PIXEL, sw / PIXEL, sh / PIXEL);
+      dlgCtx.imageSmoothingEnabled = false;
+      dlgCtx.drawImage(off, 0, 0, off.width, off.height, 0, 0, w, h);
+    }
+
+    dlgBgImg.onload = () => {
+      if (document.getElementById('scene-dialogue').classList.contains('active')) {
+        setupDlgBg();
+      }
+    };
+
+    const lines = [
+      { name: 'ALGORITHM', isAlgorithm: true,  sprite: 'algo_4.png',     text: 'Engagement is up 4,200% on content related to you.' },
+      { name: 'Karrar',    isAlgorithm: false, sprite: 'karrar_what.png', text: '...who are you?' },
+      { name: 'ALGORITHM', isAlgorithm: true,  sprite: 'algo_7.png',     text: "I'm what decides what people see. Right now, they're seeing you." },
+      { name: 'Karrar',    isAlgorithm: false, sprite: '4.png',           text: 'Then make them see my side of the story.' },
+      { name: 'ALGORITHM', isAlgorithm: true,  sprite: 'algo_6.png',     text: 'Your side generates 43 interactions per minute. The other side generates 2,847. I go where the numbers go.' },
+      { name: 'Karrar',    isAlgorithm: false, sprite: '8.png',           text: "That's not fair." },
+      { name: 'ALGORITHM', isAlgorithm: true,  sprite: 'algo_3.png',     text: "I'm not designed for fair. I'm designed for time-on-screen." },
+      { name: 'Karrar',    isAlgorithm: false, sprite: '9.png',           text: 'Amazing. Just get out of my way.' },
+    ];
+
+    const textEl   = document.getElementById('dialogue-text');
+    const nameEl   = document.getElementById('char-name');
+    const arrowEl  = document.getElementById('continue-arrow');
+    const spriteEl = document.getElementById('char-sprite');
+    const boxEl    = document.getElementById('dialogue-box');
+
+    let lineIdx = 0, charIdx = 0, typing = false, timer = null;
+
+    function showLine(idx) {
+      if (idx >= lines.length) {
+        document.getElementById('scene-dialogue').classList.remove('active');
+        document.getElementById('scene-complete').classList.add('active');
+        return;
+      }
+      const line = lines[idx];
+
+      // Name tag styling
+      nameEl.textContent = line.name;
+      nameEl.className = line.isAlgorithm ? 'algorithm-name' : '';
+
+      // Box accent colour
+      boxEl.className = line.isAlgorithm ? 'algorithm-box' : '';
+
+      // Sprite
+      spriteEl.innerHTML = '';
+      spriteEl.className = '';
+      if (line.isAlgorithm) {
+        spriteEl.classList.add('is-algorithm');
+      }
+      if (line.sprite) {
+        spriteEl.classList.add('has-img');
+        const img = document.createElement('img');
+        img.src = line.sprite;
+        spriteEl.appendChild(img);
+      }
+
+      // Glitch on/off
+      if (line.isAlgorithm) { startGlitch(); } else { stopGlitch(); }
+
+      // Typewriter
+      textEl.textContent = '';
+      arrowEl.classList.remove('visible');
+      charIdx = 0; typing = true;
+      clearInterval(timer);
+      timer = setInterval(() => {
+        textEl.textContent += line.text[charIdx++];
+        if (charIdx >= line.text.length) {
+          clearInterval(timer);
+          typing = false;
+          arrowEl.classList.add('visible');
+        }
+      }, 38);
+    }
+
+    function advance() {
+      if (typing) {
+        clearInterval(timer);
+        textEl.textContent = lines[lineIdx].text;
+        charIdx = lines[lineIdx].text.length;
+        typing = false;
+        arrowEl.classList.add('visible');
+      } else {
+        lineIdx++;
+        showLine(lineIdx);
+      }
+    }
+
+    document.getElementById('dialogue-box').addEventListener('click', advance);
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space' || e.code === 'Enter') {
+        if (document.getElementById('scene-dialogue').classList.contains('active')) advance();
+      }
+    });
+
+    function startDialogue() {
+      lineIdx = 0;
+      document.getElementById('scene-dialogue').classList.add('active');
+      setupDlgBg();
+      showLine(0);
+    }
+
+    /* ── Canvas glitch engine ── */
+    const glitchCanvas = document.getElementById('glitch-canvas');
+    const glitchCtx = glitchCanvas.getContext('2d');
+    let glitchActive = false;
+    let glitchRAF = null;
+
+    function resizeGlitchCanvas() {
+      const sp = document.getElementById('char-sprite');
+      const rect = sp.getBoundingClientRect();
+      const w = rect.width  || 460;
+      const fullH = rect.height || 420;
+      const topOff = Math.round(fullH * 0.25); // start 15% down from top
+      const h = Math.round(fullH * 0.50);      // cover the middle 50%
+      glitchCanvas.width  = w;
+      glitchCanvas.height = h;
+      glitchCanvas.style.left   = rect.left + 'px';
+      glitchCanvas.style.top    = (rect.top + topOff) + 'px';
+      glitchCanvas.style.width  = w + 'px';
+      glitchCanvas.style.height = h + 'px';
+    }
+    window.addEventListener('resize', resizeGlitchCanvas);
+
+    const GLITCH_COLORS = [
+      'rgba(255,0,80,',
+      'rgba(0,220,255,',
+      'rgba(0,255,65,',
+      'rgba(255,200,0,',
+      'rgba(180,0,255,',
+    ];
+
+    function rnd(min, max) { return Math.random() * (max - min) + min; }
+    function ri(min, max)  { return Math.floor(rnd(min, max)); }
+
+    let glitchTimer = 0;
+    let glitchBurst = false;
+    let burstEnd = 0;
+
+    function drawGlitch(ts) {
+      const W = glitchCanvas.width, H = glitchCanvas.height;
+      glitchCtx.clearRect(0, 0, W, H);
+
+      if (!glitchActive) { glitchRAF = requestAnimationFrame(drawGlitch); return; }
+
+      // Trigger bursts randomly
+      if (!glitchBurst && Math.random() < 0.008) {
+        glitchBurst = true;
+        burstEnd = ts + rnd(200, 600);
+      }
+      if (glitchBurst && ts > burstEnd) glitchBurst = false;
+
+      if (!glitchBurst && Math.random() > 0.04) {
+        glitchRAF = requestAnimationFrame(drawGlitch); return;
+      }
+
+      const intensity = glitchBurst ? 1.0 : 0.4;
+
+      // 1. Horizontal scan slices — shift bands sideways
+      const numSlices = ri(2, glitchBurst ? 10 : 4);
+      for (let s = 0; s < numSlices; s++) {
+        const sy   = ri(0, H);
+        const sh   = ri(2, glitchBurst ? 40 : 15);
+        const shiftX = rnd(-80, 80) * intensity;
+        const col = GLITCH_COLORS[ri(0, GLITCH_COLORS.length)];
+        glitchCtx.fillStyle = col + (rnd(0.05, 0.25) * intensity) + ')';
+        glitchCtx.fillRect(shiftX > 0 ? 0 : W + shiftX, sy, Math.abs(shiftX), sh);
+        glitchCtx.fillStyle = col + (rnd(0.3, 0.7) * intensity) + ')';
+        glitchCtx.fillRect(shiftX, sy, rnd(20, 200), sh);
+      }
+
+      // 2. Colored noise blocks
+      const numBlocks = ri(1, glitchBurst ? 8 : 3);
+      for (let b = 0; b < numBlocks; b++) {
+        const bx = ri(0, W), by = ri(0, H);
+        const bw = ri(10, glitchBurst ? 180 : 80);
+        const bh = ri(4,  glitchBurst ? 30  : 12);
+        const col = GLITCH_COLORS[ri(0, GLITCH_COLORS.length)];
+        glitchCtx.fillStyle = col + rnd(0.4, 0.9) + ')';
+        glitchCtx.fillRect(bx, by, bw, bh);
+      }
+
+      // 3. Full-width scan line
+      if (Math.random() < 0.3 * intensity) {
+        const ly = ri(0, H);
+        const lh = ri(1, 4);
+        glitchCtx.fillStyle = 'rgba(0,220,255,' + rnd(0.15, 0.5) + ')';
+        glitchCtx.fillRect(0, ly, W, lh);
+      }
+
+      // 4. Brief full flash
+      if (glitchBurst && Math.random() < 0.05) {
+        glitchCtx.fillStyle = 'rgba(255,255,255,0.04)';
+        glitchCtx.fillRect(0, 0, W, H);
+      }
+
+      glitchRAF = requestAnimationFrame(drawGlitch);
+    }
+
+    function startGlitch() {
+      resizeGlitchCanvas();
+      glitchActive = true;
+      if (!glitchRAF) glitchRAF = requestAnimationFrame(drawGlitch);
+    }
+    function stopGlitch() {
+      glitchActive = false;
+      glitchCtx.clearRect(0, 0, glitchCanvas.width, glitchCanvas.height);
+    }
+
+    // Glitch loop starts on first Algorithm line via showLine hook above
+    glitchRAF = requestAnimationFrame(drawGlitch);
+  </script>
+
+</body>
+</html>

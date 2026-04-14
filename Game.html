@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Internet Controversy — The Game</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d0d;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Courier New', monospace;
+    }
+
+    /* ── SCENE WRAPPER ── */
+    .scene {
+      position: fixed;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+    }
+    .scene.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* ══════════════════════════════
+       SCENE 1 — DIALOGUE
+    ══════════════════════════════ */
+    #scene-dialogue .room-bg {
+      position: absolute;
+      inset: 0;
+      background-image: url('bg.png');
+      background-size: cover;
+      background-position: center center;
+      filter: blur(3px) brightness(0.85);
+      transform: scale(1.04);
+    }
+
+    #scene-dialogue canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+    }
+
+    .vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.7) 100%);
+      pointer-events: none;
+    }
+
+    /* Character sprite */
+    #char-sprite {
+      position: absolute;
+      left: 50%;
+      bottom: 8vh;
+      transform: translateX(-50%);
+      width: 440px;
+      height: 600px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      background: linear-gradient(160deg, #3a3a4a 0%, #1e1e2a 100%);
+      border: 4px solid #fff;
+      outline: 4px solid #000;
+      image-rendering: pixelated;
+      animation: charBob 3s ease-in-out infinite;
+      z-index: 10;
+    }
+    #char-sprite::after {
+      content: '?';
+      font-size: 140px;
+      font-weight: 900;
+      color: rgba(255,255,255,0.15);
+      line-height: 1;
+      margin-bottom: 30px;
+    }
+    #char-sprite.has-img { background: none; border: none; outline: none; }
+    #char-sprite.has-img::after { display: none; }
+    #char-sprite img {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+
+    @keyframes charBob {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50%       { transform: translateX(-50%) translateY(-6px); }
+    }
+
+    /* Dialogue box */
+    #dialogue-ui {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 40px;
+      z-index: 20;
+    }
+    #dialogue-wrap {
+      position: relative;
+      width: min(860px, 92vw);
+      pointer-events: auto;
+    }
+    #char-name {
+      position: absolute;
+      top: -38px; left: 0;
+      background: #0d0d0d;
+      border: 4px solid #fff;
+      outline: 4px solid #000;
+      padding: 5px 18px 4px;
+      font-size: 18px; font-weight: 900;
+      letter-spacing: 2px; color: #fff;
+      text-transform: uppercase; white-space: nowrap;
+    }
+    #dialogue-box {
+      background: rgba(10,10,14,0.93);
+      border: 4px solid #fff;
+      outline: 4px solid #000;
+      padding: 28px 36px 24px;
+      min-height: 130px;
+      position: relative;
+    }
+    #dialogue-box::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: 0; right: 0;
+      height: 4px;
+      background: #c0392b;
+    }
+    #dialogue-text {
+      font-size: 19px; line-height: 1.65;
+      color: #f0f0f0; font-weight: 700;
+      letter-spacing: 0.5px; min-height: 3em;
+    }
+    #continue-arrow {
+      position: absolute; right: 22px; bottom: 18px;
+      font-size: 22px; color: #fff;
+      animation: blink 0.8s step-start infinite;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    #continue-arrow.visible { opacity: 1; }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+
+    /* ── Persistent back button ── */
+    #back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 100;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: #fff;
+      background: rgba(10,10,14,0.85);
+      border: 3px solid #fff;
+      outline: 3px solid #000;
+      padding: 8px 20px;
+      transition: background 0.15s;
+    }
+    #back-btn:hover { background: #c0392b; }
+
+    /* ══════════════════════════════
+       SCENE 3 — STAGE COMPLETE
+    ══════════════════════════════ */
+    #scene-complete {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      background: #0d0d0d;
+    }
+
+    #scene-complete .complete-title {
+      font-size: 52px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+    #scene-complete .complete-title span {
+      color: #c0392b;
+    }
+
+    #scene-complete .unlock-box {
+      border: 4px solid #fff;
+      outline: 4px solid #000;
+      background: rgba(10,10,14,0.95);
+      padding: 28px 48px;
+      text-align: center;
+      position: relative;
+    }
+    #scene-complete .unlock-box::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: 0; right: 0;
+      height: 4px;
+      background: #c0392b;
+    }
+    #scene-complete .unlock-label {
+      font-size: 13px;
+      letter-spacing: 3px;
+      color: #c0392b;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    #scene-complete .unlock-msg {
+      font-size: 22px;
+      font-weight: 900;
+      color: #f0f0f0;
+      letter-spacing: 1px;
+    }
+
+    #scene-complete .btn-back {
+      font-family: 'Courier New', monospace;
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: #fff;
+      background: #c0392b;
+      border: 4px solid #fff;
+      outline: 4px solid #000;
+      padding: 14px 40px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #scene-complete .btn-back:hover {
+      background: #e74c3c;
+    }
+
+    /* ══════════════════════════════
+       SCENE 2 — TUTORIAL (grid puzzle)
+    ══════════════════════════════ */
+    #scene-tutorial .room-bg {
+      position: absolute;
+      inset: 0;
+      background-image: url('tutorial_bg.png');
+      background-size: cover;
+      background-position: center center;
+      filter: blur(3px) brightness(0.7);
+      transform: scale(1.04);
+    }
+
+    /* Grid canvas fills the scene */
+    #grid-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+    }
+
+    /* Helltaker-style HUD bar at bottom */
+    #tutorial-hud {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(10,10,14,0.92);
+      border-top: 4px solid #fff;
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 30;
+    }
+    #tutorial-hud::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: 0; right: 0;
+      height: 4px;
+      background: #c0392b;
+      pointer-events: none;
+    }
+    #tutorial-hint {
+      font-size: 16px; font-weight: 700;
+      color: #f0f0f0; letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    #tutorial-hint span {
+      display: inline-block;
+      background: #fff; color: #0d0d0d;
+      padding: 2px 8px; margin: 0 3px;
+      font-weight: 900; font-size: 14px;
+    }
+    #step-counter {
+      font-size: 16px; font-weight: 900;
+      color: #c0392b; letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* ── Player sprite ── */
+    #player-sprite {
+      position: absolute;
+      pointer-events: none;
+      display: none;
+      transition: left 0.13s linear, top 0.13s linear;
+    }
+    @keyframes walk-bob {
+      0%   { transform: translateY(0px) scaleY(1); }
+      30%  { transform: translateY(-8px) scaleY(1.06); }
+      70%  { transform: translateY(-3px) scaleY(1.02); }
+      100% { transform: translateY(0px) scaleY(1); }
+    }
+    #player-sprite.walking { animation: walk-bob 0.25s ease-out; }
+    @keyframes walk-right {
+      0%   { transform: translateX(0px)  scaleX(1)    scaleY(1); }
+      20%  { transform: translateX(9px)  scaleX(1.14) scaleY(0.91); }
+      60%  { transform: translateX(3px)  scaleX(0.95) scaleY(1.04); }
+      100% { transform: translateX(0px)  scaleX(1)    scaleY(1); }
+    }
+    #player-sprite.walking-right { animation: walk-right 0.25s ease-out; }
+    @keyframes walk-left {
+      0%   { transform: translateX(0px)   scaleX(1)    scaleY(1); }
+      20%  { transform: translateX(-9px)  scaleX(1.14) scaleY(0.91); }
+      60%  { transform: translateX(-3px)  scaleX(0.95) scaleY(1.04); }
+      100% { transform: translateX(0px)   scaleX(1)    scaleY(1); }
+    }
+    #player-sprite.walking-left { animation: walk-left 0.25s ease-out; }
+  </style>
+</head>
+<body>
+
+  <!-- Persistent back button -->
+  <a id="back-btn" href="Base.html">← Menu</a>
+
+  <!-- ── SCENE 1: DIALOGUE ── -->
+  <div id="scene-dialogue" class="scene active">
+    <div class="room-bg"></div>
+    <canvas id="px"></canvas>
+    <div class="vignette"></div>
+    <div id="char-sprite"></div>
+    <div id="dialogue-ui">
+      <div id="dialogue-wrap">
+        <div id="char-name">???</div>
+        <div id="dialogue-box">
+          <div id="dialogue-text"></div>
+          <div id="continue-arrow">▼</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCENE 2: TUTORIAL ── -->
+  <div id="scene-tutorial" class="scene">
+    <div class="room-bg"></div>
+    <canvas id="grid-canvas"></canvas>
+    <img id="player-sprite" src="karrar_idle.gif" />
+    <div id="death-overlay" style="position:fixed;inset:0;background:#0d0d0d;opacity:0;pointer-events:none;transition:opacity 0.35s ease;z-index:200;"></div>
+    <div id="tutorial-hud">
+      <div id="tutorial-hint">
+        Use <span>▲</span><span>▼</span><span>◄</span><span>►</span> or <span>WASD</span> to move
+      </div>
+      <div id="step-counter">STEPS: <span id="steps">0</span> / 10</div>
+    </div>
+  </div>
+
+  <!-- ── SCENE 3: STAGE COMPLETE ── -->
+  <div id="scene-complete" class="scene">
+    <div class="complete-title">STAGE <span>CLEAR</span></div>
+    <div class="unlock-box">
+      <div class="unlock-label">New unlock</div>
+      <div class="unlock-msg">Documents has now been unlocked.</div>
+    </div>
+    <div style="display:flex; gap:20px;">
+      <a class="btn-back" href="Base.html">← Back to Menu</a>
+      <a class="btn-back" href="Game2.html" style="background:#1a1a2e;">Next Stage →</a>
+    </div>
+  </div>
+
+  <script>
+
+    /* ══════════════════════════════
+       SCENE 1 — DIALOGUE + BG
+    ══════════════════════════════ */
+    const canvas = document.getElementById('px');
+    const ctx    = canvas.getContext('2d');
+    const PIXEL  = 5;
+
+    function setupBg() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    function pixelate() {
+      const w = canvas.width, h = canvas.height;
+      const img = new Image();
+      img.src = 'bg.png';
+      img.onload = () => {
+        const scale = Math.max(w / img.width, h / img.height);
+        const sw = img.width * scale, sh = img.height * scale;
+        const ox = (w - sw) / 2, oy = (h - sh) / 2;
+        const off = document.createElement('canvas');
+        off.width  = Math.ceil(w / PIXEL);
+        off.height = Math.ceil(h / PIXEL);
+        const octx = off.getContext('2d');
+        octx.filter = 'contrast(1.4) saturate(0.7) brightness(0.85)';
+        octx.drawImage(img, ox / PIXEL, oy / PIXEL, sw / PIXEL, sh / PIXEL);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(off, 0, 0, off.width, off.height, 0, 0, w, h);
+      };
+    }
+    setupBg(); pixelate();
+    window.addEventListener('resize', () => { setupBg(); pixelate(); drawGrid(); });
+
+    /* ── DIALOGUE ── */
+    const lines = [
+      { name: 'PHONE',  sprite: 'phone.png',      text: '@JoblessIraqi is trending — #CancelJoblessIraqi' },
+      { name: 'Karrar', sprite: 'karrar_what.png',        text: 'what!' },
+      { name: 'PHONE',  sprite: 'phone.png',             text: '847 new notifications.' },
+      { name: 'Karrar', sprite: 'karrar_cover.png',      text: 'This has to be a mistake.' },
+      { name: 'PHONE',  sprite: 'phone.png',             text: '648 new notifications.' },
+      { name: 'Karrar', sprite: '5.png',                 text: 'I need to get on YouTube. Now.' },
+    ];
+
+    const textEl   = document.getElementById('dialogue-text');
+    const nameEl   = document.getElementById('char-name');
+    const arrowEl  = document.getElementById('continue-arrow');
+    const spriteEl = document.getElementById('char-sprite');
+
+    let lineIdx = 0, charIdx = 0, typing = false, timer = null;
+
+    function showLine(idx) {
+      if (idx >= lines.length) { startTutorial(); return; }
+      const line = lines[idx];
+      nameEl.textContent = line.name;
+      spriteEl.innerHTML = '';
+      if (line.sprite) {
+        spriteEl.classList.add('has-img');
+        const img = document.createElement('img');
+        img.src = line.sprite;
+        spriteEl.appendChild(img);
+      } else {
+        spriteEl.classList.remove('has-img');
+      }
+      textEl.textContent = '';
+      arrowEl.classList.remove('visible');
+      charIdx = 0; typing = true;
+      clearInterval(timer);
+      timer = setInterval(() => {
+        textEl.textContent += line.text[charIdx++];
+        if (charIdx >= line.text.length) {
+          clearInterval(timer);
+          typing = false;
+          arrowEl.classList.add('visible');
+        }
+      }, 38);
+    }
+
+    function advance() {
+      if (typing) {
+        clearInterval(timer);
+        textEl.textContent = lines[lineIdx].text;
+        charIdx = lines[lineIdx].text.length;
+        typing = false;
+        arrowEl.classList.add('visible');
+      } else {
+        lineIdx++;
+        showLine(lineIdx);
+      }
+    }
+
+    document.getElementById('dialogue-box').addEventListener('click', advance);
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space' || e.code === 'Enter') {
+        if (document.getElementById('scene-dialogue').classList.contains('active')) advance();
+      }
+    });
+
+    showLine(0);
+
+    /* ══════════════════════════════
+       SCENE 2 — TUTORIAL GRID
+    ══════════════════════════════ */
+    const COLS = 9, ROWS = 7;
+    const TILE = 90; // px per tile
+    let playerPos = { x: 8, y: 6 }; // bottom-right corner
+    const goalPos  = { x: 3, y: 2 }; // phone goal
+    let steps = 0;
+    const MAX_STEPS = 10;
+
+    const phoneImg = new Image();
+    phoneImg.src = 'phone.png';
+
+    const gc     = document.getElementById('grid-canvas');
+    const gctx   = gc.getContext('2d');
+
+    function setupGrid() {
+      gc.width  = window.innerWidth;
+      gc.height = window.innerHeight;
+    }
+
+    const tutBgImg = new Image();
+    tutBgImg.src = 'tutorial_bg.png';
+
+    function drawGrid() {
+      const w = gc.width, h = gc.height;
+      gctx.clearRect(0, 0, w, h);
+
+      // Pixelate tutorial bg onto canvas
+      const scale = Math.max(w / tutBgImg.width, h / tutBgImg.height);
+      const sw = tutBgImg.width * scale, sh = tutBgImg.height * scale;
+      const bx = (w - sw) / 2, by = (h - sh) / 2;
+      const off = document.createElement('canvas');
+      off.width  = Math.ceil(w / PIXEL);
+      off.height = Math.ceil(h / PIXEL);
+      const octx = off.getContext('2d');
+      octx.filter = 'contrast(1.3) saturate(0.8) brightness(0.7)';
+      octx.drawImage(tutBgImg, bx / PIXEL, by / PIXEL, sw / PIXEL, sh / PIXEL);
+      gctx.imageSmoothingEnabled = false;
+      gctx.drawImage(off, 0, 0, off.width, off.height, 0, 0, w, h);
+
+      const gridW = COLS * TILE;
+      const gridH = ROWS * TILE;
+      const ox = Math.floor((w - gridW) / 2);
+      const oy = Math.floor((h - gridH) / 2) - 30; // shift up slightly for HUD
+
+      // Draw tiles
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          const tx = ox + col * TILE;
+          const ty = oy + row * TILE;
+
+          const isPlayer = col === playerPos.x && row === playerPos.y;
+          const isGoal   = col === goalPos.x   && row === goalPos.y;
+
+          // Tile base
+          gctx.fillStyle = isPlayer ? 'rgba(192,57,43,0.25)'
+                         : isGoal   ? 'rgba(52,152,219,0.2)'
+                         : 'rgba(0,0,0,0.28)';
+          gctx.fillRect(tx, ty, TILE, TILE);
+
+          // Tile border
+          gctx.strokeStyle = 'rgba(255,255,255,0.18)';
+          gctx.lineWidth = 1.5;
+          gctx.strokeRect(tx + 0.75, ty + 0.75, TILE - 1.5, TILE - 1.5);
+
+          // Goal tile — draw phone image
+          if (isGoal) {
+            const pad = 8;
+            gctx.drawImage(phoneImg, tx + pad, ty + pad, TILE - pad * 2, TILE - pad * 2);
+            // Pulsing blue border
+            gctx.strokeStyle = '#3498db';
+            gctx.lineWidth = 3;
+            gctx.strokeRect(tx + 2, ty + 2, TILE - 4, TILE - 4);
+          }
+
+          // Player tile — replaced by <img> sprite; keep base tint only
+          if (isPlayer) {
+            gctx.fillStyle = 'rgba(192,57,43,0.12)';
+            gctx.fillRect(tx, ty, TILE, TILE);
+          }
+        }
+      }
+
+      // Grid outer border
+      gctx.strokeStyle = '#fff';
+      gctx.lineWidth = 4;
+      gctx.strokeRect(ox, oy, gridW, gridH);
+      // Red accent top
+      gctx.fillStyle = '#c0392b';
+      gctx.fillRect(ox, oy - 4, gridW, 4);
+
+      // Hitbox outline around player tile
+      const hx = ox + playerPos.x * TILE;
+      const hy = oy + playerPos.y * TILE;
+      gctx.save();
+      gctx.strokeStyle = 'rgba(255,255,255,0.85)';
+      gctx.lineWidth = 2;
+      gctx.strokeRect(hx + 1, hy + 1, TILE - 2, TILE - 2);
+      gctx.strokeStyle = 'rgba(192,57,43,0.7)';
+      gctx.lineWidth = 1.5;
+      gctx.strokeRect(hx + 4, hy + 4, TILE - 8, TILE - 8);
+      gctx.restore();
+
+      positionPlayerSprite(ox, oy);
+    }
+
+    function startTutorial() {
+      document.getElementById('scene-dialogue').classList.remove('active');
+      const tut = document.getElementById('scene-tutorial');
+      tut.classList.add('active');
+      setupGrid();
+      // Wait for phone image to load before first draw
+      if (phoneImg.complete) drawGrid();
+      else phoneImg.onload = drawGrid;
+    }
+
+    /* ── Player sprite ── */
+    const playerSpriteEl = document.getElementById('player-sprite');
+
+    function positionPlayerSprite(ox, oy) {
+      const ph = TILE * 1.3;
+      const pw = TILE * 0.8;
+      const px = ox + playerPos.x * TILE + TILE / 2 - pw / 2;
+      const py = oy + playerPos.y * TILE + TILE - ph;
+      playerSpriteEl.style.left   = px + 'px';
+      playerSpriteEl.style.top    = py + 'px';
+      playerSpriteEl.style.width  = pw + 'px';
+      playerSpriteEl.style.height = ph + 'px';
+      playerSpriteEl.style.display = 'block';
+    }
+
+    function triggerWalkAnim(dx) {
+      const cls = dx === 1 ? 'walking-right' : dx === -1 ? 'walking-left' : 'walking';
+      playerSpriteEl.classList.remove('walking', 'walking-right', 'walking-left');
+      void playerSpriteEl.offsetWidth;
+      playerSpriteEl.classList.add(cls);
+      setTimeout(() => playerSpriteEl.classList.remove(cls), 260);
+    }
+
+    /* Grid keyboard movement */
+    document.addEventListener('keydown', e => {
+      if (!document.getElementById('scene-tutorial').classList.contains('active')) return;
+      const dirs = {
+        ArrowUp: {dx:0,dy:-1}, ArrowDown: {dx:0,dy:1},
+        ArrowLeft: {dx:-1,dy:0}, ArrowRight: {dx:1,dy:0},
+        KeyW: {dx:0,dy:-1}, KeyS: {dx:0,dy:1},
+        KeyA: {dx:-1,dy:0}, KeyD: {dx:1,dy:0},
+      };
+      const d = dirs[e.code];
+      if (!d) return;
+      e.preventDefault();
+      const nx = playerPos.x + d.dx;
+      const ny = playerPos.y + d.dy;
+      if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
+        playerPos = { x: nx, y: ny };
+        triggerWalkAnim(d.dx);
+        steps++;
+        document.getElementById('steps').textContent = steps;
+        drawGrid();
+        // Win — reached the phone
+        if (playerPos.x === goalPos.x && playerPos.y === goalPos.y) {
+          localStorage.setItem('essayUnlocked', 'true');
+          setTimeout(() => {
+            document.getElementById('scene-tutorial').classList.remove('active');
+            document.getElementById('scene-complete').classList.add('active');
+          }, 500);
+          return;
+        }
+        // Out of steps — fade out, reset, fade in
+        if (steps >= MAX_STEPS) {
+          const overlay = document.getElementById('death-overlay');
+          overlay.style.opacity = '1';
+          setTimeout(() => {
+            playerPos = { x: 8, y: 6 };
+            steps = 0;
+            document.getElementById('steps').textContent = 0;
+            drawGrid();
+            setTimeout(() => { overlay.style.opacity = '0'; }, 80);
+          }, 380);
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>
