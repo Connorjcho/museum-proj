@@ -209,6 +209,35 @@
     }
 
 
+    /* ── CONCLUSION WINDOW ── */
+    #file-window.conclusion-window {
+      border-color: #3a2020;
+      border-top: 3px solid #c0392b;
+      background: #0a0505;
+    }
+    #file-window.conclusion-window .window-titlebar {
+      background: #120808;
+      border-bottom-color: #2a1010;
+    }
+    #file-window.conclusion-window .win-title {
+      color: #c0392b;
+      letter-spacing: 3px;
+    }
+    #file-window.conclusion-window .window-body {
+      background: #0a0505;
+      border-top: 1px solid #1a0808;
+    }
+    #file-window.conclusion-window .window-body h2 {
+      color: #c0392b;
+      border-bottom: 1px solid #2a1010;
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+    #file-window.conclusion-window .window-body p {
+      color: #bbb;
+      line-height: 1.9;
+    }
+
     /* ── BIBLIOGRAPHY ACCORDION ── */
     .bib-cat { border: 1px solid #1e1e2a; }
     .bib-cat-header {
@@ -807,7 +836,7 @@
       draft:      { title: 'Social Media Algorithms & Echo Chambers', content: `<h2>Social Media Algorithms & Echo Chambers</h2><p>One major issue is how social media algorithms control what users see. These platforms are designed to keep people engaged, so they show content that matches what users already like or agree with. Over time, this creates echo chambers, where people are mostly exposed to one side of an issue. Dharwadker (2024) describes this as a "rich getting richer" effect, where the feed becomes narrower with every interaction. This means that users are not seeing a balanced range of opinions, but instead a filtered version of reality. Research by Smith (2018) found that 53% of Facebook users have only a limited understanding of how algorithms shape their feeds, while 20% do not understand them at all. Because of this, many people do not question the information they see. In addition, algorithms often prioritize emotional or controversial content because it gets more engagement, which allows extreme opinions and misinformation to spread more easily.</p>` },
       notes:      { title: 'Anonymity and Toxic Behavior Online',    content: `<h2>Anonymity and Toxic Behavior Online</h2><p>Another major problem is online anonymity and toxicity. When people can hide their identity, they often feel less responsible for their actions. This connects to the "online disinhibition effect," which explains why people behave more aggressively online than they would in real life. Research by Lapidot-Lefler et al. (2012) shows that anonymity weakens self-control and increases antisocial behavior. This can lead to cyberbullying, spreading rumors, and leaving harmful comments. In South Korea, this is especially serious, with 1 in 5 teenagers experiencing cyberbullying, including hate comments and online harassment (Kim, 2024). These experiences can lead to anxiety, stress, and lower academic performance, showing how online behavior can directly affect real life. While anonymity can be helpful for protecting privacy or allowing people to talk about personal issues, it also makes it easier for individuals to avoid consequences.</p>` },
       evidence:   { title: 'Cancel Culture',                         content: `<h2>Cancel Culture</h2><p>These issues then connect directly to cancel culture. Because algorithms repeatedly show similar opinions and anonymity removes accountability, people are more likely to react quickly and join in when someone is being criticized online. Social media allows people to post, comment, and share content instantly, which is why cancel culture spreads so quickly. According to Ng (2020), cancel culture "works through platforms where people can quickly respond to public figures." In some cases, this can be positive, as it brings attention to serious issues and holds people accountable. Clark (2024) explains that it is similar to past forms of protest, where groups worked together to challenge those in power. However, people often react before fully understanding what happened. A short clip or screenshot can spread without context, leading others to form strong opinions too quickly. Once something goes viral, it becomes very difficult to correct, even if new information shows that the situation was misunderstood.</p>` },
-      conclusion: { title: 'logged Off',                             content: `<h2>Logged Off</h2><p>These three issues do not happen separately. Instead, they build on each other. Algorithms shape what people see, anonymity shapes how people behave, and together they make cancel culture more intense and widespread. This creates a cycle where misinformation spreads, opinions become more extreme, and toxic behavior increases. Studies show that false information spreads faster than true information online (Vosoughi et al., 2018), which makes the problem even worse because people often believe the first version they see. Even when corrections are made, they do not spread as widely, leaving lasting false impressions.</p><p>In conclusion, social media is not just a tool for communication; it shapes how people understand the world and interact with others. While it can raise awareness and connect people, it also creates an environment where limited perspectives, lack of accountability, and quick reactions are common. To improve this, people need to question what they see, think before reacting, and be more aware of how social media influences them. By doing this, online spaces can become more fair, respectful, and informed.</p>` },
+      conclusion: { title: 'Logged Off',                             content: `<h2>Logged Off</h2><p>These three issues do not happen separately. Instead, they build on each other. Algorithms shape what people see, anonymity shapes how people behave, and together they make cancel culture more intense and widespread. This creates a cycle where misinformation spreads, opinions become more extreme, and toxic behavior increases. Studies show that false information spreads faster than true information online (Vosoughi et al., 2018), which makes the problem even worse because people often believe the first version they see. Even when corrections are made, they do not spread as widely, leaving lasting false impressions.</p><p>In conclusion, social media is not just a tool for communication; it shapes how people understand the world and interact with others. While it can raise awareness and connect people, it also creates an environment where limited perspectives, lack of accountability, and quick reactions are common. To improve this, people need to question what they see, think before reacting, and be more aware of how social media influences them. By doing this, online spaces can become more fair, respectful, and informed.</p>` },
     };
 
     function openFile(key, triggerEl) {
@@ -817,7 +846,13 @@
       const f = files[key];
       document.getElementById('win-title').textContent = f.title;
       document.getElementById('win-body').innerHTML = f.content;
-      document.getElementById('file-window').classList.add('open');
+      const fw = document.getElementById('file-window');
+      fw.classList.add('open');
+      if (key === 'conclusion') {
+        fw.classList.add('conclusion-window');
+      } else {
+        fw.classList.remove('conclusion-window');
+      }
     }
 
     const panels = {
