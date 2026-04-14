@@ -206,8 +206,6 @@
       padding: 0 10px 8px;
     }
 
-    /* Flappy widget — locked until essay unlocked */
-    #flappy-widget.locked { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
 
     /* ── BIBLIOGRAPHY ACCORDION ── */
     .bib-cat { border: 1px solid #1e1e2a; }
@@ -654,14 +652,6 @@
           <div class="window-body" id="win-body"></div>
         </div>
 
-        <!-- Flappy Karrar widget -->
-        <div id="flappy-widget" class="locked" style="position:absolute; top:80px; right:200px; width:230px; background:#0d0d0d; border:2px solid #1e1e2a; border-top:3px solid #c0392b; font-family:'Courier New',monospace; z-index:22;">
-          <div style="display:flex; align-items:center; gap:6px; padding:5px 10px; border-bottom:1px solid #1a1a22; background:#0a0a0f;">
-            <span style="width:6px;height:6px;border-radius:50%;background:#c0392b;display:inline-block;"></span>
-            <span style="font-size:7px;letter-spacing:2px;text-transform:uppercase;color:#555;font-weight:900;">Flappy Karrar</span>
-          </div>
-          <canvas id="flappy-canvas" width="230" height="180" style="display:block;cursor:pointer;"></canvas>
-        </div>
 
         <!-- Sticky note / Intro -->
         <div class="sticky-note">
@@ -739,8 +729,6 @@
         el.classList.remove('locked');
         const b = el.querySelector('.lock-badge'); if (b) b.remove();
       });
-      const fw = document.getElementById('flappy-widget');
-      if (fw) fw.classList.remove('locked');
     }
 
     // Cheat code — unlock everything
@@ -821,155 +809,6 @@
       }
     }
 
-    /* ── FLAPPY KARRAR ── */
-    (function () {
-      const canvas = document.getElementById('flappy-canvas');
-      const ctx = canvas.getContext('2d');
-      const W = canvas.width, H = canvas.height;
-
-      const GRAVITY = 0.2, FLAP = -4.2, PIPE_SPEED = 1.2;
-      const PIPE_W = 28, GAP = 75, BIRD_W = 22, BIRD_H = 28;
-
-      const karrarImg = new Image();
-      karrarImg.src = 'karrar_what.png';
-
-      let bird, pipes, score, gameOver, started, frameCount;
-
-      function reset() {
-        bird = { x: 40, y: H / 2, vy: 0 };
-        pipes = []; score = 0; gameOver = false; frameCount = 0;
-      }
-      reset();
-
-      function spawnPipe() {
-        const gapY = 24 + Math.random() * (H - GAP - 48);
-        pipes.push({ x: W, gapY, scored: false });
-      }
-
-      function update() {
-        if (!started || gameOver) return;
-        frameCount++;
-        bird.vy += GRAVITY;
-        bird.y += bird.vy;
-
-        if (frameCount % 120 === 0 || pipes.length === 0) spawnPipe();
-        pipes.forEach(p => { p.x -= PIPE_SPEED; });
-        pipes = pipes.filter(p => p.x > -PIPE_W);
-
-        // Score
-        pipes.forEach(p => {
-          if (!p.scored && p.x + PIPE_W < bird.x) { p.scored = true; score++; }
-        });
-
-        // Collision — walls
-        if (bird.y < 0 || bird.y + BIRD_H > H) { gameOver = true; return; }
-
-        // Collision — pipes
-        pipes.forEach(p => {
-          if (bird.x + BIRD_W > p.x + 2 && bird.x < p.x + PIPE_W - 2) {
-            if (bird.y < p.gapY || bird.y + BIRD_H > p.gapY + GAP) gameOver = true;
-          }
-        });
-      }
-
-      function draw() {
-        // Background
-        ctx.fillStyle = '#0d0d0d';
-        ctx.fillRect(0, 0, W, H);
-
-        // Scanline effect
-        for (let y = 0; y < H; y += 4) {
-          ctx.fillStyle = 'rgba(0,0,0,0.15)';
-          ctx.fillRect(0, y, W, 1);
-        }
-
-        if (!started) {
-          ctx.fillStyle = '#333';
-          ctx.font = '900 9px Courier New';
-          ctx.textAlign = 'center';
-          ctx.fillText('CLICK OR SPACE TO PLAY', W / 2, H / 2 - 6);
-          ctx.fillStyle = '#1e1e1e';
-          ctx.font = '8px Courier New';
-          ctx.fillText('avoid the cancel bars', W / 2, H / 2 + 10);
-          return;
-        }
-
-        // Pipes — cancel bars
-        pipes.forEach(p => {
-          // Top bar
-          ctx.fillStyle = '#7b1a1a';
-          ctx.fillRect(p.x, 0, PIPE_W, p.gapY);
-          ctx.fillStyle = '#c0392b';
-          ctx.fillRect(p.x, p.gapY - 6, PIPE_W, 6);
-          // Bottom bar
-          ctx.fillStyle = '#7b1a1a';
-          ctx.fillRect(p.x, p.gapY + GAP, PIPE_W, H - p.gapY - GAP);
-          ctx.fillStyle = '#c0392b';
-          ctx.fillRect(p.x, p.gapY + GAP, PIPE_W, 6);
-          // X labels
-          ctx.fillStyle = 'rgba(255,255,255,0.25)';
-          ctx.font = '700 9px Courier New';
-          ctx.textAlign = 'center';
-          ctx.fillText('✕', p.x + PIPE_W / 2, p.gapY / 2 + 4);
-          if (H - p.gapY - GAP > 16)
-            ctx.fillText('✕', p.x + PIPE_W / 2, p.gapY + GAP + (H - p.gapY - GAP) / 2 + 4);
-        });
-
-        // Karrar sprite
-        if (karrarImg.complete && karrarImg.naturalWidth > 0) {
-          ctx.save();
-          ctx.translate(bird.x + BIRD_W / 2, bird.y + BIRD_H / 2);
-          const tilt = Math.min(Math.max(bird.vy * 3, -25), 45);
-          ctx.rotate((tilt * Math.PI) / 180);
-          ctx.drawImage(karrarImg, -BIRD_W / 2, -BIRD_H / 2, BIRD_W, BIRD_H);
-          ctx.restore();
-        } else {
-          ctx.fillStyle = '#fff';
-          ctx.fillRect(bird.x, bird.y, BIRD_W, BIRD_H);
-        }
-
-        // Score
-        ctx.fillStyle = '#444';
-        ctx.font = '700 9px Courier New';
-        ctx.textAlign = 'left';
-        ctx.fillText('SCORE ' + score, 6, 14);
-
-        // Game over
-        if (gameOver) {
-          ctx.fillStyle = 'rgba(0,0,0,0.7)';
-          ctx.fillRect(0, 0, W, H);
-          ctx.fillStyle = '#c0392b';
-          ctx.font = '900 13px Courier New';
-          ctx.textAlign = 'center';
-          ctx.fillText('CANCELLED', W / 2, H / 2 - 12);
-          ctx.fillStyle = '#555';
-          ctx.font = '8px Courier New';
-          ctx.fillText('score: ' + score, W / 2, H / 2 + 4);
-          ctx.fillText('click to retry', W / 2, H / 2 + 18);
-        }
-      }
-
-      function flap() {
-        if (!started) { started = true; return; }
-        if (gameOver) { reset(); started = true; return; }
-        bird.vy = FLAP;
-      }
-
-      canvas.addEventListener('click', flap);
-      document.addEventListener('keydown', e => {
-        if (e.code === 'Space' && document.getElementById('flappy-widget')) {
-          e.preventDefault();
-          flap();
-        }
-      });
-
-      function loop() {
-        update();
-        draw();
-        requestAnimationFrame(loop);
-      }
-      loop();
-    })();
 
     function closeArchive() {
       document.getElementById('archive-window').classList.remove('open');
