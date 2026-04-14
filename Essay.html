@@ -209,6 +209,26 @@
     /* Flappy widget — locked until essay unlocked */
     #flappy-widget.locked { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
 
+    /* ── BIBLIOGRAPHY ACCORDION ── */
+    .bib-cat { border: 1px solid #1e1e2a; }
+    .bib-cat-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 12px; cursor: pointer;
+      font-size: 9px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #888;
+      background: #0d0d14; user-select: none;
+    }
+    .bib-cat-header:hover { background: #111120; color: #c0392b; }
+    .bib-cat-header.open { color: #c0392b; border-bottom: 1px solid #1e1e2a; }
+    .bib-arrow { font-size: 14px; font-weight: 400; line-height: 1; }
+    .bib-cat-body { display: none; padding: 10px 12px; background: #08080f; }
+    .bib-cat-body.open { display: block; }
+    .bib-entry { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #111; }
+    .bib-entry:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+    .bib-cite { font-size: 10px; color: #aaa; font-weight: 900; margin-bottom: 4px; line-height: 1.5; }
+    .bib-annotation { font-size: 10px; color: #555; line-height: 1.6; margin-bottom: 6px; }
+    .bib-link { font-size: 9px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #c0392b; text-decoration: none; }
+    .bib-link:hover { text-decoration: underline; }
+
     /* ── SEALED CONCLUSION DOCUMENT ── */
     #sealed-conclusion {
       position: absolute;
@@ -529,64 +549,82 @@
           <div class="window-body">
             <div style="border-bottom:1px solid #222; margin-bottom:14px; padding-bottom:10px;">
               <div style="font-size:12px; color:#fff; font-weight:900; letter-spacing:1px; text-transform:uppercase;">Annotated Bibliography</div>
-              <div style="font-size:10px; color:#555; margin-top:2px;">Click "Find More" to visit the original source</div>
+              <div style="font-size:10px; color:#555; margin-top:2px;">Click a category to expand</div>
             </div>
-            <div style="display:flex; flex-direction:column; gap:16px; overflow-y:auto; max-height:340px; padding-right:4px;">
+            <div style="display:flex; flex-direction:column; gap:4px; overflow-y:auto; max-height:340px; padding-right:4px;">
 
-              <!-- SOCIAL MEDIA ALGORITHMS -->
-              <div>
-                <div style="font-size:9px; font-weight:900; letter-spacing:3px; text-transform:uppercase; color:#c0392b; margin-bottom:8px; border-bottom:1px solid #1e1e2a; padding-bottom:4px;">Social Media Algorithms & Echo Chambers</div>
-
-                <div style="background:#0d0d14; border:1px solid #1e1e2a; padding:10px 14px; margin-bottom:8px;">
-                  <div style="font-size:10px; color:#aaa; font-weight:900; margin-bottom:4px;">Kurovski, M. (2024). #24: Video recommendations at Facebook with Amey Dharwadker. <span style="color:#666; font-weight:400;">Recsperts — Recommender Systems Experts.</span></div>
-                  <div style="font-size:10px; color:#666; line-height:1.6; margin-bottom:8px;">Firsthand account of how Facebook builds recommendation algorithms. Dharwadker explains how engagement optimization continuously narrows what users see, creating echo chambers without them realizing it.</div>
-                  <a href="https://recsperts.com/episodes/24-video-recommendations-at-facebook-with-amey-dharwadker/transcript" target="_blank" style="font-size:9px; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:#c0392b; text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">FIND MORE ↗</a>
+              <!-- CATEGORY 1: SOCIAL MEDIA ALGORITHMS -->
+              <div class="bib-cat">
+                <div class="bib-cat-header" onclick="toggleBib(this)">
+                  <span>01 — Social Media Algorithms & Echo Chambers</span>
+                  <span class="bib-arrow">+</span>
                 </div>
-
-                <div style="background:#0d0d14; border:1px solid #1e1e2a; padding:10px 14px;">
-                  <div style="font-size:10px; color:#aaa; font-weight:900; margin-bottom:4px;">Smith, A. (2018). Many Facebook users don't understand how the site's news feed works. <span style="color:#666; font-weight:400;">Pew Research Center.</span></div>
-                  <div style="font-size:10px; color:#666; line-height:1.6; margin-bottom:8px;">Provides concrete data showing that 53% of Facebook users have limited understanding of how the algorithm shapes their feed, illustrating how echo chambers form invisibly.</div>
-                  <a href="https://www.pewresearch.org/short-reads/2018/09/05/many-facebook-users-dont-understand-how-the-sites-news-feed-works/" target="_blank" style="font-size:9px; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:#c0392b; text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">FIND MORE ↗</a>
-                </div>
-              </div>
-
-              <!-- ANONYMITY -->
-              <div>
-                <div style="font-size:9px; font-weight:900; letter-spacing:3px; text-transform:uppercase; color:#c0392b; margin-bottom:8px; border-bottom:1px solid #1e1e2a; padding-bottom:4px;">Anonymity & Toxic Behavior Online</div>
-
-                <div style="background:#0d0d14; border:1px solid #1e1e2a; padding:10px 14px; margin-bottom:8px;">
-                  <div style="font-size:10px; color:#aaa; font-weight:900; margin-bottom:4px;">Lapidot-Lefler, N., & Barak, A. (2012). Effects of anonymity, invisibility, and lack of eye contact on toxic online disinhibition. <span style="color:#666; font-weight:400;">Computers in Human Behavior, 28(2), 434-443.</span></div>
-                  <div style="font-size:10px; color:#666; line-height:1.6; margin-bottom:8px;">Peer-reviewed experimental study identifying how being unidentifiable and the absence of social cues remove behavioral restraint online, explaining the rise of toxic behavior.</div>
-                  <a href="https://www.sciencedirect.com/science/article/abs/pii/S0747563211002317" target="_blank" style="font-size:9px; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:#c0392b; text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">FIND MORE ↗</a>
-                </div>
-
-                <div style="background:#0d0d14; border:1px solid #1e1e2a; padding:10px 14px;">
-                  <div style="font-size:10px; color:#aaa; font-weight:900; margin-bottom:4px;">Kim, H. (2024). 1 in 5 Korean teenagers experiences cyberbullying: survey. <span style="color:#666; font-weight:400;">The Korea Times.</span></div>
-                  <div style="font-size:10px; color:#666; line-height:1.6; margin-bottom:8px;">Survey data from over 100 students showing cyberbullying affects 1 in 5 Korean teenagers, demonstrating real-world consequences of online anonymity and toxic behavior.</div>
-                  <a href="https://www.koreatimes.co.kr/southkorea/society/20240310/1-in-5-korean-teenagers-experiences-cyberbullying-survey" target="_blank" style="font-size:9px; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:#c0392b; text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">FIND MORE ↗</a>
+                <div class="bib-cat-body">
+                  <div class="bib-entry">
+                    <div class="bib-cite">Kurovski, M. (Host). (2024, October 1). #24: Video recommendations at Facebook with Amey Dharwadker [Audio podcast episode]. In <span style="color:#555; font-weight:400;">Recsperts — Recommender Systems Experts.</span></div>
+                    <div class="bib-annotation">This podcast episode is highly relevant to the topic, offering a firsthand account of how Facebook builds and manages its recommendation algorithms. Dharwadker explains how algorithms continuously reinforce user engagement, creating echo chambers that narrow what people see over time without them realizing it. He also raises concerns about whether optimizing for engagement benefits users or fuels online division, connecting directly to how internet controversy is shaped by platform design. In terms of credibility, although it is a podcast rather than a peer-reviewed publication, its value comes from Dharwadker himself, a Machine Learning Engineering Manager at Meta with nearly a decade of experience and a Master's degree from Columbia University. However, his position at Meta may bias his perspective toward presenting the company positively, and the conversational format may lack the depth of formal research.</div>
+                    <a href="https://recsperts.com/episodes/24-video-recommendations-at-facebook-with-amey-dharwadker/transcript" target="_blank" class="bib-link">FIND MORE ↗</a>
+                  </div>
+                  <div class="bib-entry">
+                    <div class="bib-cite">Smith, A. (2018, September 5). Many Facebook users don't understand how the site's news feed works. <span style="color:#555; font-weight:400;">Pew Research Center.</span></div>
+                    <div class="bib-annotation">This source holds strong relevance to the subtopic of social media algorithms and echo chambers, as it provides concrete data on how little Facebook users understand the algorithm that controls what they see. It shows how echo chambers form without users even realizing it, as they continue to consume one-sided content without questioning it. In terms of credibility, this source comes from the Pew Research Center, one of the most respected and widely cited nonpartisan research centers in the world, and the survey is based on a nationally representative sample of Facebook users. However, a limitation is that it was published in 2018, meaning it may not fully reflect how users interact with today's more complex algorithms.</div>
+                    <a href="https://www.pewresearch.org/short-reads/2018/09/05/many-facebook-users-dont-understand-how-the-sites-news-feed-works/" target="_blank" class="bib-link">FIND MORE ↗</a>
+                  </div>
                 </div>
               </div>
 
-              <!-- CANCEL CULTURE -->
-              <div>
-                <div style="font-size:9px; font-weight:900; letter-spacing:3px; text-transform:uppercase; color:#c0392b; margin-bottom:8px; border-bottom:1px solid #1e1e2a; padding-bottom:4px;">Cancel Culture</div>
-
-                <div style="background:#0d0d14; border:1px solid #1e1e2a; padding:10px 14px; margin-bottom:8px;">
-                  <div style="font-size:10px; color:#aaa; font-weight:900; margin-bottom:4px;">Clark, M. D. (2024). From calling out to cancel culture. <span style="color:#666; font-weight:400;">In We tried to tell y'all: Black Twitter and the rise of digital counternarratives. Oxford University Press.</span></div>
-                  <div style="font-size:10px; color:#666; line-height:1.6; margin-bottom:8px;">Traces cancel culture's roots in marginalized communities' protest traditions and how social media transformed these practices into rapid, wide-reaching accountability movements.</div>
-                  <a href="https://doi.org/10.1093/oso/9780190068141.003.0005" target="_blank" style="font-size:9px; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:#c0392b; text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">FIND MORE ↗</a>
+              <!-- CATEGORY 2: ANONYMITY -->
+              <div class="bib-cat">
+                <div class="bib-cat-header" onclick="toggleBib(this)">
+                  <span>02 — Anonymity & Toxic Behavior Online</span>
+                  <span class="bib-arrow">+</span>
                 </div>
-
-                <div style="background:#0d0d14; border:1px solid #1e1e2a; padding:10px 14px; margin-bottom:8px;">
-                  <div style="font-size:10px; color:#aaa; font-weight:900; margin-bottom:4px;">Ng, E. (2020). No grand pronouncements here: Reflections on cancel culture and digital media participation. <span style="color:#666; font-weight:400;">Television & New Media, 21(6), 621-627.</span></div>
-                  <div style="font-size:10px; color:#666; line-height:1.6; margin-bottom:8px;">Peer-reviewed analysis of how social media platforms enable cancel culture, examining whether it serves as legitimate accountability or unfair public judgment.</div>
-                  <a href="https://doi.org/10.1177/1527476420918828" target="_blank" style="font-size:9px; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:#c0392b; text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">FIND MORE ↗</a>
+                <div class="bib-cat-body">
+                  <div class="bib-entry">
+                    <div class="bib-cite">Lapidot-Lefler, N., & Barak, A. (2012). Effects of anonymity, invisibility, and lack of eye contact on toxic online disinhibition. <span style="color:#555; font-weight:400;">Computers in Human Behavior, 28(2), 434-443.</span></div>
+                    <div class="bib-annotation">This article is relevant to the subtopic of anonymity and toxic behavior online, as it directly identifies how being unidentifiable and a lack of social cues remove restraint in online behavior, explaining why toxic behavior is more common online than in real life. In terms of credibility, this source is published in a peer-reviewed academic journal and uses an experimental method to isolate the specific conditions that encourage harmful behavior, minimizing outside interference. It also appears free of explicit bias as no ethnic, racial, or age distinctions were made, making it a reliable source for this topic.</div>
+                    <a href="https://www.sciencedirect.com/science/article/abs/pii/S0747563211002317" target="_blank" class="bib-link">FIND MORE ↗</a>
+                  </div>
+                  <div class="bib-entry">
+                    <div class="bib-cite">Kim, H. (2024, March 11). 1 in 5 Korean teenagers experiences cyberbullying: survey. <span style="color:#555; font-weight:400;">The Korea Times.</span></div>
+                    <div class="bib-annotation">This source is relevant to the subtopic of anonymity and toxic behavior online as it provides real-world evidence of how toxic interactions occur among Korean teenagers, showing that cyberbullying is not theoretical but a widespread experience that affects a significant portion of teens in their daily lives. In terms of credibility, this source is published in the Korea Times, a reputable English newspaper in South Korea, and is based on survey data collected from over 100 students, making its findings broadly applicable. However, because it is a news article rather than a peer-reviewed publication, it may lack the depth and rigor of formal academic research.</div>
+                    <a href="https://www.koreatimes.co.kr/southkorea/society/20240310/1-in-5-korean-teenagers-experiences-cyberbullying-survey" target="_blank" class="bib-link">FIND MORE ↗</a>
+                  </div>
                 </div>
+              </div>
 
-                <div style="background:#0d0d14; border:1px solid #1e1e2a; padding:10px 14px;">
-                  <div style="font-size:10px; color:#aaa; font-weight:900; margin-bottom:4px;">Vosoughi, S., Roy, D., & Aral, S. (2018). The spread of true and false news online. <span style="color:#666; font-weight:400;">Science, 359(6380), 1146-1151.</span></div>
-                  <div style="font-size:10px; color:#666; line-height:1.6; margin-bottom:8px;">Landmark MIT study showing false information spreads faster and farther than true information online, explaining why misinformation during cancel culture events is so difficult to correct.</div>
-                  <a href="https://www.science.org/doi/10.1126/science.aap9559" target="_blank" style="font-size:9px; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:#c0392b; text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">FIND MORE ↗</a>
+              <!-- CATEGORY 3: CANCEL CULTURE -->
+              <div class="bib-cat">
+                <div class="bib-cat-header" onclick="toggleBib(this)">
+                  <span>03 — Cancel Culture</span>
+                  <span class="bib-arrow">+</span>
+                </div>
+                <div class="bib-cat-body">
+                  <div class="bib-entry">
+                    <div class="bib-cite">Clark, M. D. (2024). From calling out to cancel culture. In M. D. Clark, <span style="color:#555; font-weight:400;">We tried to tell y'all: Black Twitter and the rise of digital counternarratives (Oxford Studies in Digital Politics). Oxford University Press.</span></div>
+                    <div class="bib-annotation">This source is relevant to the subtopic of cancel culture, as it provides the cultural and historical background of how these practices developed from earlier forms of activism and boycotts used by marginalized communities, showing that cancel culture is not just a recent internet trend but part of a longer tradition of holding powerful people accountable. It also explains how social media has changed these forms of protest by allowing information to spread quickly and reach larger audiences. In terms of credibility, Meredith D. Clark is a widely recognized media scholar and professor whose research focuses on digital media, race, and online communication. Her work is grounded in academic media studies and historical analysis, making it a credible source for understanding digital culture and social media activism.</div>
+                    <a href="https://doi.org/10.1093/oso/9780190068141.003.0005" target="_blank" class="bib-link">FIND MORE ↗</a>
+                  </div>
+                  <div class="bib-entry">
+                    <div class="bib-cite">Ng, E. (2020). No grand pronouncements here: Reflections on cancel culture and digital media participation. <span style="color:#555; font-weight:400;">Television & New Media, 21(6), 621-627.</span></div>
+                    <div class="bib-annotation">This source is relevant to the subtopic of cancel culture as it examines how social media platforms create an environment where cancel culture can occur. It also raises the important question of whether cancel culture is effective in holding people accountable or simply a way of unfair judgment, connecting directly to the broader topic of internet controversy. In terms of credibility, this article is a peer-reviewed academic journal by SAGE, and is written by Eve Ng, an associate professor at Ohio University, whose research specifically addresses the cultural and political significance of digital media, making this a reliable and academically grounded source.</div>
+                    <a href="https://doi.org/10.1177/1527476420918828" target="_blank" class="bib-link">FIND MORE ↗</a>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CATEGORY 4: SPREAD OF MISINFORMATION -->
+              <div class="bib-cat">
+                <div class="bib-cat-header" onclick="toggleBib(this)">
+                  <span>04 — Spread of Misinformation</span>
+                  <span class="bib-arrow">+</span>
+                </div>
+                <div class="bib-cat-body">
+                  <div class="bib-entry">
+                    <div class="bib-cite">Vosoughi, S., Roy, D., & Aral, S. (2018). The spread of true and false news online. <span style="color:#555; font-weight:400;">Science, 359(6380), 1146-1151.</span></div>
+                    <div class="bib-annotation">This source directly supports the argument that misinformation spreads rapidly online, reinforcing why false claims made during cancel culture events are so hard to correct. The study found that false news spreads faster, farther, and more broadly than true news on Twitter, largely because false stories tend to be more novel and emotionally provocative. In terms of credibility, this is a landmark peer-reviewed study published in Science, one of the most prestigious academic journals in the world, conducted by researchers at MIT using a dataset of 126,000 stories shared by 3 million users over 11 years, making it highly rigorous and reliable.</div>
+                    <a href="https://www.science.org/doi/10.1126/science.aap9559" target="_blank" class="bib-link">FIND MORE ↗</a>
+                  </div>
                 </div>
               </div>
 
@@ -753,6 +791,23 @@
       document.querySelectorAll('.file-icon').forEach(el => el.classList.remove('selected'));
       event.currentTarget.classList.add('selected');
       document.getElementById('archive-window').classList.add('open');
+    }
+
+    function toggleBib(header) {
+      const body = header.nextElementSibling;
+      const arrow = header.querySelector('.bib-arrow');
+      const isOpen = body.classList.contains('open');
+      // close all
+      document.querySelectorAll('.bib-cat-header').forEach(h => {
+        h.classList.remove('open');
+        h.querySelector('.bib-arrow').textContent = '+';
+        h.nextElementSibling.classList.remove('open');
+      });
+      if (!isOpen) {
+        header.classList.add('open');
+        arrow.textContent = '−';
+        body.classList.add('open');
+      }
     }
 
     /* ── FLAPPY KARRAR ── */
