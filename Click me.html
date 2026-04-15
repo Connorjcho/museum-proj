@@ -188,16 +188,12 @@
 
     // Reset reminder — always show after 3s
     const reminder = document.getElementById('reset-reminder');
-    reminder.style.pointerEvents = 'auto';
     setTimeout(() => {
-      reminder.style.opacity = '1';
-      reminder.style.transform = 'translateY(0)';
+      reminder.style.display = 'block';
     }, 3000);
     document.addEventListener('click', function hideReminder(e) {
       if (!e.target.closest('#reset-reminder') && !e.target.closest('#reset-btn')) {
-        reminder.style.opacity = '0';
-        reminder.style.transform = 'translateY(10px)';
-        setTimeout(() => { reminder.style.pointerEvents = 'none'; }, 500);
+        reminder.style.display = 'none';
         document.removeEventListener('click', hideReminder);
       }
     });
@@ -238,7 +234,7 @@
   </div>
 
   <!-- Reset reminder notification -->
-  <div id="reset-reminder" style="position:fixed; bottom:110px; right:20px; width:220px; background:#0d0d0d; border:2px solid #333; border-left:3px solid #c0392b; font-family:'Courier New',monospace; padding:12px 14px; z-index:1000; opacity:0; transform:translateY(10px); transition:opacity 0.5s, transform 0.5s; pointer-events:none;">
+  <div id="reset-reminder" style="display:none; position:fixed; bottom:110px; right:20px; width:220px; background:#0d0d0d; border:2px solid #333; border-left:3px solid #c0392b; font-family:'Courier New',monospace; padding:12px 14px; z-index:1000;">
     <div style="font-size:8px; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:#c0392b; margin-bottom:6px;">For Next Visitor</div>
     <div style="font-size:9px; color:#aaa; line-height:1.6;">When you're done, please press <span style="color:#fff; font-weight:900;">RESET PROGRESS</span> so the next visitor can enjoy the full experience.</div>
     <div style="margin-top:8px; font-size:8px; color:#444; letter-spacing:1px;">— Click anywhere to dismiss</div>
