@@ -186,23 +186,21 @@
     }
 
 
-    // Reset reminder — show if ending is complete
-    if (localStorage.getItem('endingComplete') === 'true') {
-      const reminder = document.getElementById('reset-reminder');
-      reminder.style.pointerEvents = 'auto';
-      setTimeout(() => {
-        reminder.style.opacity = '1';
-        reminder.style.transform = 'translateY(0)';
-      }, 1500);
-      document.addEventListener('click', function hideReminder(e) {
-        if (!e.target.closest('#reset-btn')) {
-          reminder.style.opacity = '0';
-          reminder.style.transform = 'translateY(10px)';
-          setTimeout(() => { reminder.style.pointerEvents = 'none'; }, 500);
-          document.removeEventListener('click', hideReminder);
-        }
-      });
-    }
+    // Reset reminder — always show after 3s
+    const reminder = document.getElementById('reset-reminder');
+    reminder.style.pointerEvents = 'auto';
+    setTimeout(() => {
+      reminder.style.opacity = '1';
+      reminder.style.transform = 'translateY(0)';
+    }, 3000);
+    document.addEventListener('click', function hideReminder(e) {
+      if (!e.target.closest('#reset-reminder') && !e.target.closest('#reset-btn')) {
+        reminder.style.opacity = '0';
+        reminder.style.transform = 'translateY(10px)';
+        setTimeout(() => { reminder.style.pointerEvents = 'none'; }, 500);
+        document.removeEventListener('click', hideReminder);
+      }
+    });
 
     // Cheat code input
     document.getElementById('cheat-input').addEventListener('input', function () {
