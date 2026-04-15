@@ -742,17 +742,21 @@
             <!-- Glitch scanlines -->
             <div style="position:absolute; inset:0; background:repeating-linear-gradient(0deg, rgba(0,0,0,0.4) 0px, rgba(0,0,0,0.4) 1px, transparent 1px, transparent 4px); pointer-events:none; z-index:2;"></div>
             <!-- Noise blocks -->
-            <div style="position:absolute; top:20%; left:10%; width:60%; height:6px; background:#111; opacity:0.8; animation:glitch-bar 2.4s infinite;"></div>
-            <div style="position:absolute; top:55%; left:5%; width:40%; height:4px; background:#0d0d0d; opacity:0.9; animation:glitch-bar 1.8s infinite 0.6s;"></div>
+            <div style="position:absolute; top:15%; left:0%; width:100%; height:8px; background:#1a0000; animation:glitch-bar 1.2s infinite;"></div>
+            <div style="position:absolute; top:40%; left:0%; width:80%; height:5px; background:#c0392b; opacity:0.15; animation:glitch-bar 0.9s infinite 0.3s;"></div>
+            <div style="position:absolute; top:65%; left:10%; width:90%; height:7px; background:#1a0000; animation:glitch-bar 1.5s infinite 0.7s;"></div>
+            <div style="position:absolute; top:80%; left:0%; width:50%; height:4px; background:#c0392b; opacity:0.1; animation:glitch-bar 0.7s infinite 0.1s;"></div>
             <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; z-index:3;">
               <div style="font-size:22px; filter:grayscale(1) opacity(0.3);">▶</div>
-              <div style="font-size:9px; color:#333; letter-spacing:2px; text-transform:uppercase;">FILE CORRUPTED</div>
-              <div style="font-size:8px; color:#2a2a2a; letter-spacing:1px;">ERR — 0x000043FF</div>
+              <div style="font-size:9px; color:#555; letter-spacing:2px; text-transform:uppercase; animation:txt-glitch 1.6s infinite;">FILE CORRUPTED</div>
+              <div style="font-size:8px; color:#c0392b; letter-spacing:1px; font-weight:900; animation:txt-glitch 2.1s infinite 0.4s;">MISSING WORK</div>
+              <div style="font-size:7px; color:#2a2a2a; letter-spacing:1px;">ERR — 0x000043FF</div>
             </div>
           </div>
         </div>
         <style>
-          @keyframes glitch-bar { 0%,90%,100%{opacity:0} 92%{opacity:0.9; transform:translateX(-4px)} 95%{opacity:0.6; transform:translateX(4px)} 98%{opacity:0} }
+          @keyframes glitch-bar { 0%,80%,100%{opacity:0; transform:translateX(0)} 83%{opacity:1; transform:translateX(-8px)} 86%{opacity:0.7; transform:translateX(10px)} 89%{opacity:1; transform:translateX(-4px)} 92%{opacity:0} }
+          @keyframes txt-glitch { 0%,85%,100%{opacity:1; transform:none; text-shadow:none} 87%{opacity:0.6; transform:translateX(-3px); text-shadow:2px 0 #c0392b} 90%{opacity:1; transform:translateX(3px); text-shadow:-2px 0 #c0392b} 93%{opacity:0.8; transform:none} }
         </style>
 
         <!-- Expand modal -->
