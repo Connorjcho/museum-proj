@@ -139,8 +139,9 @@
       padding: 6px 14px;
       border: 1px solid #333;
       position: fixed;
-      bottom: 60px;
+      bottom: 48px;
       right: 20px;
+      z-index: 999;
     }
     #reset-btn:hover { color: #fff; border-color: #c0392b; background: rgba(192,57,43,0.1); }
   </style>
@@ -207,15 +208,18 @@
   </div>
 
   <!-- Reset progress button -->
-  <button id="reset-btn" onclick="
-    localStorage.removeItem('essayUnlocked');
-    localStorage.removeItem('stage2Complete');
-    localStorage.removeItem('stage3Complete');
-    localStorage.removeItem('stage4Complete');
-    localStorage.removeItem('cheatUnlocked');
-    localStorage.removeItem('endingComplete');
-    location.reload();
-  ">RESET PROGRESS</button>
+  <div style="position:fixed; bottom:44px; right:20px; text-align:right; z-index:999;">
+    <div style="font-family:'Courier New',monospace; font-size:0.55rem; color:#444; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;">Restart experience</div>
+    <button id="reset-btn" onclick="
+      localStorage.removeItem('essayUnlocked');
+      localStorage.removeItem('stage2Complete');
+      localStorage.removeItem('stage3Complete');
+      localStorage.removeItem('stage4Complete');
+      localStorage.removeItem('cheatUnlocked');
+      localStorage.removeItem('endingComplete');
+      location.reload();
+    ">&#8635; RESET PROGRESS</button>
+  </div>
 
   <!-- Cheat code flash notification -->
   <div id="cheat-flash" style="position:fixed; top:30px; left:50%; transform:translateX(-50%); background:#c0392b; color:#fff; font-family:'Courier New',monospace; font-size:0.85rem; font-weight:900; letter-spacing:3px; text-transform:uppercase; padding:10px 32px; border:4px solid #fff; outline:4px solid #000; display:none; z-index:999;">
