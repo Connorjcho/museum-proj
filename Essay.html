@@ -737,12 +737,23 @@
 
         <!-- Video placeholder -->
         <div class="video-section locked">
-          <div class="video-label">📹 Documentary</div>
-          <div class="video-placeholder" onclick="alert('Video not yet available.')">
-            <div class="play-icon">▶</div>
-            <div class="vid-text">Trevor's missing work :(</div>
+          <div class="video-label" style="color:#c0392b; letter-spacing:2px;">⚠ Documentary</div>
+          <div class="video-placeholder" style="background:#080808; border-color:#1a0a0a; cursor:default; position:relative; overflow:hidden;" onclick="void(0)">
+            <!-- Glitch scanlines -->
+            <div style="position:absolute; inset:0; background:repeating-linear-gradient(0deg, rgba(0,0,0,0.4) 0px, rgba(0,0,0,0.4) 1px, transparent 1px, transparent 4px); pointer-events:none; z-index:2;"></div>
+            <!-- Noise blocks -->
+            <div style="position:absolute; top:20%; left:10%; width:60%; height:6px; background:#111; opacity:0.8; animation:glitch-bar 2.4s infinite;"></div>
+            <div style="position:absolute; top:55%; left:5%; width:40%; height:4px; background:#0d0d0d; opacity:0.9; animation:glitch-bar 1.8s infinite 0.6s;"></div>
+            <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; z-index:3;">
+              <div style="font-size:22px; filter:grayscale(1) opacity(0.3);">▶</div>
+              <div style="font-size:9px; color:#333; letter-spacing:2px; text-transform:uppercase;">FILE CORRUPTED</div>
+              <div style="font-size:8px; color:#2a2a2a; letter-spacing:1px;">ERR — 0x000043FF</div>
+            </div>
           </div>
         </div>
+        <style>
+          @keyframes glitch-bar { 0%,90%,100%{opacity:0} 92%{opacity:0.9; transform:translateX(-4px)} 95%{opacity:0.6; transform:translateX(4px)} 98%{opacity:0} }
+        </style>
 
         <!-- Expand modal -->
         <div id="expand-modal">
